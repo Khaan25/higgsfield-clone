@@ -84,7 +84,7 @@ export function Lightbox({
               </div>
             ))}
           </dl>
-          <div className="mt-auto grid grid-cols-2 gap-2">
+          <div className="sticky bottom-0 -mx-5 -mb-5 mt-auto grid grid-cols-2 gap-2 border-t border-line bg-surface p-5 lg:static lg:m-0 lg:border-0 lg:p-0">
             <button type="button" onClick={onVary} className="col-span-2 flex h-10 items-center justify-center gap-2 rounded-xl bg-accent text-sm font-semibold text-accent-fg hover:brightness-110">
               <Shuffle className="size-4" /> Make variations
             </button>

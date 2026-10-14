@@ -175,7 +175,8 @@ export function Studio() {
               className="ml-auto flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-sm text-muted hover:text-fg"
             >
               <KeyRound className="size-4" aria-hidden />
-              <span>{apiKey ? "Gemini key" : "Use your Gemini key"}</span>
+              <span className="sm:hidden">{apiKey ? "Key" : "Add key"}</span>
+              <span className="hidden sm:inline">{apiKey ? "Gemini key" : "Use your Gemini key"}</span>
               {apiKey && <span className="size-1.5 rounded-full bg-emerald-400" aria-label="(saved)" />}
             </button>
             <a href={REPO_URL} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-muted hover:text-fg">
@@ -223,8 +224,8 @@ export function Studio() {
 
           {history.length > 0 && (
             <div className="mb-4 flex items-center gap-3">
-              <h2 className="font-display text-lg font-semibold">Your images</h2>
-              <span className="text-xs text-muted">{history.length} saved on this device</span>
+              <h2 className="whitespace-nowrap font-display text-lg font-semibold">Your images</h2>
+              <span className="hidden text-xs text-muted sm:inline">{history.length} saved on this device</span>
               <label className="relative ml-auto w-44 sm:w-64">
                 <span className="sr-only">Search your images by prompt</span>
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />

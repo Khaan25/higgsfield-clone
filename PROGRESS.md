@@ -8,11 +8,11 @@ Constraints: logs in `.agent-logs/` are public and never edited/deleted; no app 
 | M0 Capture gate | done | `565a6ce`: `CAPTURE-TEST.md` has canaries from sessions 329a0438 + 3c7de566; `.gitignore` extended |
 | M1 Product exploration | done | 6 docs in `research/`, 28 PNGs, all doc references resolve; `research/evidence/guest-network.txt` |
 | M2 Reverse engineering | done | `research/reverse-engineering.md` (CONFIRMED/INFERRED), `research/evidence/rea-summary.json`, REA screenshot 29 |
-| M3 Strategy | in progress | `PRODUCT_STRATEGY.md` written except the 7 brief questions (brief text not in repo) |
+| M3 Strategy | done | `PRODUCT_STRATEGY.md`: 7 brief-derived questions answered (brief has none numbered), scored table, 1 primary journey, excluded list, 3 cited improvements, provider decision |
 | M4 Architecture + scaffold | done | `ARCHITECTURE.md`; Next 16.4 scaffold; typecheck/lint/build pass; `GET /` 200 on dev |
 | M5 Primary slice | done (core) | composer + style/aspect/count + generate + honest pending + live/demo results + lightbox + history/search/delete; Playwright smoke desktop+mobile: live gen 4–5s, demo fallback on 429, history survives reload, 0 console errors; `research/screenshots/31-clone-live-generation-desktop.png` |
 | BYOK (user request) | done | Gemini key dialog (session-only by default), model picker, browser→Google call, typed key/quota errors; mocked test: bad key banner, success card, 0 server calls, key only in sessionStorage |
-| M6 Polish | todo | |
+| M6 Polish | done | mobile lightbox actions pinned, mobile header/history heading tightened; `research/screenshots/compare-1..5-*.png` (Higgsfield vs Lumen, captions match evidence) |
 | M7 QA | todo | |
 | M8 Publish | todo | |
 | M9 Walkthrough | todo | |
@@ -31,6 +31,6 @@ Decisions:
 - Desktop app opens sessions in `.claude/worktrees/*`; hooks still log to the main checkout via `$CLAUDE_PROJECT_DIR`. `.claude/worktrees/` is gitignored.
 - `capture.py` keeps the `author` already in an existing log's front matter, so older session files are not retagged.
 
-Blockers: need the 8x brief text (7 strategy questions + 8 walkthrough points) — asked user.
+Blockers: none. (Brief received 2026-10-14; it has no numbered questions/points, so the 7 questions and walkthrough points are derived from its judging criteria and hand-in checklist.)
 
-Next action: M6 polish (mobile lightbox actions above the fold, compare screenshots vs Higgsfield), then M7 Playwright specs. Still need the brief text for M3 questions + M9.
+Next action: M7 — Playwright specs in `e2e/` (desktop 1440x900 + mobile 390x844), demo mode via GENERATION_MODE=demo + mocked Gemini, zero console errors; then full check suite.
