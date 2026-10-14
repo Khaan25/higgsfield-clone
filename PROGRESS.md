@@ -13,7 +13,7 @@ Constraints: logs in `.agent-logs/` are public and never edited/deleted; no app 
 | M5 Primary slice | done (core) | composer + style/aspect/count + generate + honest pending + live/demo results + lightbox + history/search/delete; Playwright smoke desktop+mobile: live gen 4–5s, demo fallback on 429, history survives reload, 0 console errors; `research/screenshots/31-clone-live-generation-desktop.png` |
 | BYOK (user request) | done | Gemini key dialog (session-only by default), model picker, browser→Google call, typed key/quota errors; mocked test: bad key banner, success card, 0 server calls, key only in sessionStorage |
 | M6 Polish | done | mobile lightbox actions pinned, mobile header/history heading tightened; `research/screenshots/compare-1..5-*.png` (Higgsfield vs Lumen, captions match evidence) |
-| M7 QA | todo | |
+| M7 QA | done | `e2e/studio.spec.ts`: 7 tests × desktop 1440x900 + mobile 390x844 = 14 passed; console-error fixture; `typecheck && lint && build && test:e2e` exit 0. Found + fixed: icon-only Source link had no accessible name on mobile |
 | M8 Publish | todo | |
 | M9 Walkthrough | todo | |
 | M10 Final verification | todo | |
@@ -33,4 +33,4 @@ Decisions:
 
 Blockers: none. (Brief received 2026-10-14; it has no numbered questions/points, so the 7 questions and walkthrough points are derived from its judging criteria and hand-in checklist.)
 
-Next action: M7 — Playwright specs in `e2e/` (desktop 1440x900 + mobile 390x844), demo mode via GENERATION_MODE=demo + mocked Gemini, zero console errors; then full check suite.
+Next action: M8 — secret scan, `gh repo create Khaan25/higgsfield-clone --public --source . --push`, `npx vercel@latest --prod`, verify prod in fresh Playwright context, README.

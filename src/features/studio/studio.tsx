@@ -179,7 +179,7 @@ export function Studio() {
               <span className="hidden sm:inline">{apiKey ? "Gemini key" : "Use your Gemini key"}</span>
               {apiKey && <span className="size-1.5 rounded-full bg-emerald-400" aria-label="(saved)" />}
             </button>
-            <a href={REPO_URL} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-muted hover:text-fg">
+            <a href={REPO_URL} target="_blank" rel="noreferrer" aria-label="Source code on GitHub" className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-muted hover:text-fg">
               <Code2 className="size-4" aria-hidden />
               <span className="hidden sm:inline">Source</span>
             </a>
