@@ -48,11 +48,17 @@ No environment variables are needed.
 ```bash
 npm run typecheck && npm run lint && npm run build && npm run test:e2e
 ```
-- `test:e2e` runs 7 Playwright tests at 1440×900 and 390×844 against a production build in demo mode. It covers navigation, validation, demo generation, the result view, history after reload, the fallback banner and BYOK (with a mocked Google API). Every test fails on any unexpected console error.
+- `test:e2e` runs 8 Playwright tests at 1440×900 and 390×844 (16 runs) against a production build in demo mode. It covers navigation, validation, demo generation, the result view, history after reload, migration of corrupted or old saved history, the fallback banner and BYOK (with a mocked Google API). Every test fails on any unexpected console error.
+- `lint` includes `@shadcn/lint`'s six design-system rules.
 - The deployed URL check: `E2E_BASE_URL=https://higgsfield-clone-zeta.vercel.app npx playwright test e2e/production.spec.ts`
 
 ## Stack
-Next.js 16 (App Router) · React 19 · Tailwind CSS 4 · Motion · lucide-react · Playwright. See [`ARCHITECTURE.md`](ARCHITECTURE.md).
+Next.js 16 (App Router) · React 19 · Tailwind CSS 4 · shadcn/ui (Radix) · zod · Motion · lucide-react · Playwright · `@shadcn/lint`. See [`ARCHITECTURE.md`](ARCHITECTURE.md).
+
+Code layout:
+- zod schemas are the single source of types and validate every untrusted input (the API body and localStorage).
+- A generator factory gives the free, Gemini and demo engines one contract.
+- The studio UI is composed from small shadcn-based parts, with state in hooks.
 
 ## Known limitations
 - **The free provider is shared and rate-limited.** In testing, about every second burst request got HTTP 402/429. The Demo fallback covers this, but live results aren't guaranteed on the free model.

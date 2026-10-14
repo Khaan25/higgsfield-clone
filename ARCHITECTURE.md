@@ -1,91 +1,101 @@
 # Architecture: Lumen Studio
 
-The app is one page: a Next.js 16 App Router workspace plus one server route. There is no database and no auth.
+The app is one page plus one server route. Built with Next.js 16 (App Router), React 19, Tailwind 4, shadcn/ui (Radix, `nova` style), zod and Motion. There is no database and no auth.
 
 ## Folder map
 ```
-src/app/layout.tsx               fonts, metadata, dark theme
-src/app/page.tsx                 renders <Studio/>
-src/app/api/generate/route.ts    POST: validate → provider → typed result or typed error
-src/features/studio/             the workspace (composer, settings, feed, lightbox, history store)
-src/lib/                         shared and server-safe code: types, catalogue, validation, provider, demo
-src/components/ui/               shadcn primitives actually used
-public/demo/                     pre-generated real images for Demo mode
-e2e/                             Playwright specs (desktop 1440×900, mobile 390×844)
+src/app/layout.tsx                 fonts (Inter, Sora), metadata, dark theme
+src/app/page.tsx                   renders <Studio/>
+src/app/api/generate/route.ts      POST: zod-validate → free provider batch → {generation} | {error}
+
+src/lib/
+  catalog.ts                       product constants: limits, styles, aspect ratios, Gemini models, buildPrompt
+  schema.ts                        zod schemas = runtime contracts AND the TypeScript types (z.infer)
+  batch.ts                         GenerationError + runSequentialBatch (one batch policy for every provider)
+  pollinations.ts                  server-only free provider (keyless Pollinations → data URL)
+  generators/                      factory: one Generator contract, one implementation per engine
+    index.ts                       createGenerator(modelId, {apiKey}) → Generator {generate, onFailure}
+    free.ts                        browser → /api/generate            onFailure: "demo"
+    gemini.ts                      browser → Google (visitor's key)    onFailure: "report"
+    demo.ts                        createDemoGeneration + EXAMPLES (pre-generated images in public/demo)
+  utils.ts                         cn()
+
+src/features/studio/               the workspace, by responsibility
+  studio.tsx                       layout only: composes the parts below
+  use-studio.ts                    state machine: settings, request, failure policy, retry, reuse
+  use-history.ts / use-api-key.ts  persistence hooks
+  storage.ts                       localStorage/sessionStorage with zod-validated reads
+  header.tsx  status-banner.tsx  empty-state.tsx  history-feed.tsx  generation-card.tsx  pending-card.tsx
+  composer.tsx                     prompt + SettingMenu (DropdownMenu radio) ×3 + count + Generate/Stop
+  lightbox.tsx  key-dialog.tsx     shadcn Dialog
+  aspect.ts  download.ts           static aspect classes, download helper
+
+src/components/ui/                 shadcn-generated; Lumen variants marked "// Lumen:" (badge success,
+                                   textarea ghost, empty-title hero, dialog-content fullscreen)
+e2e/                               Playwright: studio.spec.ts (demo mode), production.spec.ts (deployed URL)
 ```
 
-## Types (`src/lib/types.ts`)
-```ts
-type AspectRatio = "1:1" | "4:3" | "3:4" | "16:9" | "9:16";
-interface StyleOption { id: string; label: string; bestFor: string; promptSuffix: string }
-interface GenerationSettings { prompt: string; styleId: string; aspectRatio: AspectRatio; count: 1|2|3|4 }
-interface GeneratedImage { id: string; src: string; width: number; height: number; seed: number }
-interface Generation {
-  id: string; settings: GenerationSettings; images: GeneratedImage[];
-  source: "live" | "demo"; model: string; createdAt: string;
-  notice?: string;                // e.g. "2 of 4 generated. The provider is rate-limiting."
-}
-type GenerateError = { kind: "invalid" | "rate_limited" | "provider_error" | "timeout"; message: string; retryAfter?: number };
-```
-The plan named a `ModelOption` type. I replaced it with `StyleOption` because the free provider serves only one model (`sana`); see "Provider" below. A model picker whose choice changes nothing would be dishonest.
+## Contracts (`src/lib/schema.ts`)
+- **`settingsSchema` → `GenerationSettings`:** `{prompt, modelId, styleId, aspectRatio, count}`.
+  - The prompt is trimmed and must be 3–1000 characters. Its error messages are the exact copy shown under the prompt box.
+  - `styleId` and `aspectRatio` are closed enums from the catalog.
+  - `count` is 1–4.
+  - `modelId` defaults to `"free"`, which migrates history saved before the model picker existed.
+- **`draftSchema`:** the composer draft. Each field `.catch()`es back to its default, so a stale draft can never block start-up.
+- **`generationSchema` → `Generation`:** what history stores.
+  - `source: "live" | "demo"`; demo images were not generated from the prompt.
+  - `notice` explains partial batches or demo substitution.
+- **`generateErrorSchema` → `GenerateError`:** `kind` is `invalid | auth | rate_limited | provider_error | timeout`, plus a visitor-safe `message` and an optional `retryAfter`.
+- **`generateResponseSchema`:** `POST /api/generate` returns `{generation}` or `{error}`. The client parses it, so a proxy error page becomes a typed `provider_error`.
 
 ## Server route `POST /api/generate`
-1. Parse the JSON and validate the body:
-   - prompt is 3–1000 chars after trim
-   - known style and aspect ratio
-   - count is 1–4
-   - Failure returns `400 {kind:"invalid"}`.
-2. For i in 1..count, **one at a time** (the anonymous provider rate-limits concurrent calls), call the provider with a random seed and a 45s `AbortSignal.timeout`.
-3. Any image succeeded: return `200 {generation}` with `source:"live"`. The images are base64 `data:` URLs, so the browser never calls the provider and nothing goes stale. A partial batch sets `notice`.
-4. None succeeded: return `200 {error}` with a typed error. It is a 200 because the fallback is an expected outcome; a 4xx/5xx makes the browser log a red console error on every fallback. Malformed input (`invalid`) is the only real 400.
-   - 402/429 → `rate_limited`, with the `Retry-After` value carried in the error body as `retryAfter` if present.
-   - Other non-2xx or a non-image body → `provider_error`.
-   - Abort → `timeout`.
-5. `GENERATION_MODE=demo` forces demo mode (used by the e2e tests and as an escape hatch).
+1. `settingsSchema.safeParse(body)`. Failure returns `400 {error: {kind: "invalid"}}`. The server forces `modelId: "free"`.
+2. `GENERATION_MODE=demo` returns `200 {error: provider_error}` (used by e2e and as an escape hatch).
+3. `runSequentialBatch` calls `generatePollinationsImage` with a 25s timeout per image and a 50s budget per batch (`maxDuration` is 60).
+4. Success returns `200 {generation}`; a partial batch carries a `notice`. Provider failure returns `200 {error}`.
 
-## Provider (`src/lib/provider.ts`)
-- **Endpoint:** Pollinations' legacy keyless endpoint, `GET https://image.pollinations.ai/prompt/{encoded prompt + style suffix}?width&height&seed&nologo=true`. Checked 2026-10-14: anonymous use serves model `sana` only, and returns 402 under burst.
-- **Image size:** the long side is 1024px; the short side comes from the aspect ratio.
-- **No secret exists.** If a key-based provider is added later, it stays in this server module and never gets the `NEXT_PUBLIC_` prefix.
+Provider failures are a 200 on purpose. The client handles them as an expected outcome (Demo fallback), and a 4xx/5xx would log a red console error for every visitor.
 
-## Demo fallback (`src/lib/demo.ts` + `public/demo/`)
-- **When it triggers:** `GENERATION_MODE=demo`, or any `GenerateError` except `invalid`.
-- **Where it runs:** the client builds a `Generation` with `source:"demo"` from the bundled images:
-  - `shape = square | landscape | portrait` from the aspect ratio
-  - index = `hash(prompt) % N` within that shape, so the result is deterministic for the tests
-- **Exact match:** if the prompt is one of the example prompts, its own image is used.
-- **UI:**
-  - The result card shows a **Demo** badge.
-  - A banner explains why: "Live generation is rate-limited right now. Showing a sample image, not one generated from your prompt." It offers a Retry action.
-- Validation errors never fall back to demo. They are shown inline.
+## Generator factory
+`createGenerator(modelId, {apiKey})` returns a `Generator`. `useStudio` makes one dispatch call, then applies the generator's `onFailure` policy:
+- **`free`** (`onFailure: "demo"`): the visitor can't fix a busy free tier, so they get labelled sample images plus a "Retry live" banner.
+- **`gemini`** (`onFailure: "report"`): a bad key or missing quota is the visitor's to fix. They get a red banner with "Update key" and "Use free model instead".
+
+Adding an engine means one new file in `generators/` and one branch in `createGenerator`; the UI doesn't change.
+
+`runSequentialBatch` is shared by both live engines:
+- One image at a time, because both providers punish bursts: 402 on the free tier, 429 on Gemini.
+- It stops at the first failure or when the budget runs low.
+- It keeps the partial results and only throws when nothing was produced.
+
+## Providers
+- **Free: Pollinations' keyless endpoint**, `GET https://image.pollinations.ai/prompt/{prompt + style}?width&height&seed&nologo=true`.
+  - Checked 2026-10-14: anonymous use serves `sana` only, adds a watermark, and returns 402 under burst.
+  - The image comes back as a `data:` URL, so the browser never calls the provider.
+- **Bring your own key: Gemini Interactions API**, `POST https://generativelanguage.googleapis.com/v1beta/interactions`, called from the browser.
+  - CORS was verified 2026-10-14, so the key never reaches our server.
+  - The response shape isn't documented for REST, so `findImage()` takes the last `image/*` block with base64 `data`. This is unverified with a real key; the mocked shape is in e2e.
+
+## Demo fallback
+`createDemoGeneration(settings, notice)` picks pre-generated real images whose shape (square, landscape or portrait) matches the aspect ratio. An example prompt gets its own image; any other prompt maps to one by FNV-1a hash, so the result is deterministic for the tests. The result card shows a **Demo** badge, and the lightbox says "not generated from this prompt".
 
 ## State and persistence
-- `useStudio` (React state):
-  - the settings draft
-  - the in-flight request: one at a time, with an `AbortController`
-  - the error or demo banner
-  - lightbox selection
-- `localStorage`:
-  - `lumen:draft`: the composer draft, mirroring Higgsfield's `hf:image-form-upd`
-  - `lumen:history`: `Generation[]`, newest first
-- On `QuotaExceededError` the oldest generations are evicted until the write fits. Every access is wrapped in try/catch, and the app works without storage.
-- History actions: search by prompt, Reuse settings, Download, Delete, Clear all.
+- **`useStudio`** holds the settings draft, one in-flight request (with an `AbortController` for Stop), the prompt error, the status notice, and the key-dialog state.
+- **localStorage keys:**
+  - `lumen:draft`
+  - `lumen:history` (newest first; the oldest entries are evicted on `QuotaExceededError`)
+  - `lumen:gemini-key`, only when "Remember" is ticked
+- **sessionStorage:** `lumen:gemini-key` by default.
+- **Reads are validated with zod.** Invalid history entries are dropped and a bad draft falls back to defaults (covered by e2e).
 
-## Bring your own key (Gemini), `src/lib/gemini.ts` + `src/features/studio/key-dialog.tsx`
-- **Where the key lives.** A visitor can paste their own Gemini API key. It is stored in `sessionStorage` by default, or in `localStorage` only if they tick "Remember on this device". It is held in React state.
-- **The call goes browser → Google, never through our server.** It is `POST https://generativelanguage.googleapis.com/v1beta/interactions` with header `x-goog-api-key` and body `{model, input:[{type:"text"}], response_format:{type:"image", mime_type, aspect_ratio}}`.
-  - Google's endpoint allows cross-origin requests (preflight checked 2026-10-14).
-  - `/api/generate` is never called on this path; the e2e test asserts this.
-- **Models (checked 2026-10-14):**
-  - `gemini-3.1-flash-lite-image`
-  - `gemini-3.1-flash-image`
-  - `gemini-nano-banana-2.1`
-  - `gemini-3-pro-image`
-
-  Picking one without a key opens the key dialog.
-- **Response parsing.** The REST response shape isn't documented beyond the SDK's `output_image`, so `findImage()` takes the last block that has an `image/*` `mime_type` or `mimeType` and base64 `data`. This is unverified against a real key; mocked shapes are covered in e2e.
-- **Error mapping:**
-  - 400 "API key not valid", 401 or 403 → `auth`
-  - 429 → `rate_limited` (free-tier keys usually have no image quota)
-  - 404 → model unavailable
-- **Failures on this path show a red banner instead of demo images,** because the visitor can fix them. It offers "Update key" and "Use free model instead".
+## UI and lint conventions
+- **Use shadcn components first.**
+  - Menus are DropdownMenu with RadioGroup.
+  - Overlays are Dialog and AlertDialog.
+  - Notices are Alert, labels are Badge.
+  - The first screen is Empty, loading is Skeleton.
+  - Forms are Field, Input, InputGroup and Checkbox.
+- **`@shadcn/lint`** (`eslint.config.mjs`, all six rules) applies to `src/**`, excluding the generated `src/components/ui`.
+  - `no-restyle` allows layout classes only. A different look means a variant in `components/ui`, not a `className` override.
+  - No raw colours, arbitrary values, inline styles or dynamic component classes.
+- **Theme:** the Lumen palette is mapped onto shadcn semantic tokens in `globals.css` (dark only). Amber is `primary`, and `success` marks Live results.

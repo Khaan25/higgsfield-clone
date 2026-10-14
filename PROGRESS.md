@@ -15,10 +15,12 @@ Constraints: logs in `.agent-logs/` are public and never edited/deleted; no app 
 | M6 Polish | done | mobile lightbox actions pinned, mobile header/history heading tightened; `research/screenshots/compare-1..5-*.png` (Higgsfield vs Lumen, captions match evidence) |
 | M7 QA | done | `e2e/studio.spec.ts`: 7 tests × desktop 1440x900 + mobile 390x844 = 14 passed; console-error fixture; `typecheck && lint && build && test:e2e` exit 0. Found + fixed: icon-only Source link had no accessible name on mobile |
 | M8 Publish | done | secret scan of `git log -p` clean; repo https://github.com/Khaan25/higgsfield-clone PUBLIC; prod https://higgsfield-clone-zeta.vercel.app (/ 200, live gen 200 in ~11s); `e2e/production.spec.ts` 2/2 passed fresh context (desktop live, mobile rate-limited -> labelled Demo); README |
-| M9 Walkthrough | todo | |
+| M9 Walkthrough | done | `WALKTHROUGH.md` 718 words, strongest moment first, 8 brief-derived points |
+| Refactor (zia-review plan, user-approved) | done | `16e39f3` zod + generator factory; `c6f8f76` shadcn/ui + composition; `ad8c5f6` @shadcn/lint (6 rules, 0 errors); docs per /document-code; 16/16 e2e |
 | M10 Final verification | todo | |
 
 Decisions:
+- 2026-10-14 zia-review plan approved: zod schemas (single source of types), generator factory with onFailure policy, shared runSequentialBatch (Gemini now has a batch budget), shadcn/ui radix-nova, @shadcn/lint with `no-restyle` allowing layout only; component looks changed via variants marked `// Lumen:`.
 - BYOK: browser calls Google directly (CORS verified), key never touches our server; failures show fixable error banner, not demo. Real-key response shape unverified (needs the user's key in the browser).
 - API returns provider failures as `200 {error}` (typed) so fallbacks don't log red console errors; only malformed input is a real 400.
 - App name: Lumen Studio ("inspired by Higgsfield"). Pollinations anonymous serves only `sana` (flux/turbo return identical bytes; 402 on burst) -> Style presets replace a model picker (`StyleOption` instead of `ModelOption`); generation is sequential server-side; images returned as data URLs.
@@ -33,4 +35,4 @@ Decisions:
 
 Blockers: none. (Brief received 2026-10-14; it has no numbered questions/points, so the 7 questions and walkthrough points are derived from its judging criteria and hand-in checklist.)
 
-Next action: M9 — `WALKTHROUGH.md` (<=750 words, strongest moment first), then M10 full verification + checks.md.
+Next action: M10 — redeploy, production spec at both viewports, run all 13 acceptance checks, write checks.md, print submission block.

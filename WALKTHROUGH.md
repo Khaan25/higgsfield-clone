@@ -25,17 +25,16 @@ That one interaction is the whole thesis, so let me show you why."
 **0:30 to 1:20 · What I found on Higgsfield [point 4]**
 *(Show `compare-2-guest-generate.png`.)*
 "I used Higgsfield first and screenshotted every step. As a guest, pressing Generate shows an 'In progress' card. I recorded the network traffic: no generation request is ever sent. Eight seconds later it becomes 'Create an account to see generated image'.
-Signed in with no credits, you get a full-screen paywall. About a third of the API calls the workspace makes on load are promo endpoints.
+Signed in with no credits, you hit a paywall.
 The core loop is good; it's just gated. So I didn't clone the UI. I rebuilt the loop, ungated."
-*(Optional: flash `research/reverse-engineering.md`. I used REA and DevTools, and each finding is tagged confirmed or inferred.)*
 
 **1:20 to 2:40 · The product [points 5, 7]**
 *(Back in Lumen.)*
-- "**Settings explain themselves.** Every model states its price and trade-off. Styles say what they're best for, and aspect ratios show a shape and a use case: 9:16 is 'Reels, Stories'." *(Open the Model, Style and Aspect menus. Escape closes them.)*
+- "**Settings explain themselves.** Every model states its price and trade-off, and every style and aspect ratio its use." *(Open the Model and Aspect menus.)*
 - "**Honest progress.** A real timer and a Stop button, never a fake bar." *(Generate 2 images.)*
 - "**When the free provider is busy,** and it's rate-limited, you don't hit a wall. You get real sample images clearly marked **Demo**, with the reason and a Retry button." *(If a Demo result appears naturally, point at it; otherwise show `compare-5-provider-busy.png`.)*
 - "**Click any image:** the prompt with Copy, the model, seed and size, then Make variations, Reuse settings or Download." *(Open the lightbox and press Reuse settings.)*
-- "**History lives in the workspace.** Search it, reload the page, and it's still there." *(Search, then reload.)*
+- "**History stays in the workspace** and survives a reload." *(Reload.)*
 - *(Resize to mobile or show `compare-4-mobile.png`.)* "Same workspace on a phone. Higgsfield sends mobile users to a different app."
 
 **2:40 to 3:20 · Bring your own key [points 5, 7]**
@@ -52,8 +51,8 @@ The key stays in this tab unless you opt in to remembering it, and the request g
 - "The repo is public. Every prompt and response with the agent is captured automatically by hooks into `.agent-logs`, and committed alongside the code it produced. `CAPTURE-TEST.md` shows the setup was verified before any app code."
 - "The order of the work was: capture gate, research, reverse engineering, strategy, then build.
   - I changed course when the free provider turned out to serve only one model: I swapped a fake model picker for honest styles.
-  - I made fallbacks return typed responses, so visitors never see console errors."
-- "There are 14 Playwright tests across desktop and mobile, plus a production check on the live URL."
+  - Then a review pass: zod contracts, a generator factory, shadcn components and `@shadcn/lint`."
+- "16 Playwright runs across desktop and mobile, plus a check on the live URL."
 
 **4:45 to 5:00 · Close**
 "So: a real image in seconds with no sign-up, honest about what's live and what's a demo, and it gets better if you bring your own key. Links are in the submission. Thanks."
