@@ -6,3 +6,16 @@ test-results
 playwright-report
 .vercel
 .claude/worktrees/
+
+# from create-next-app
+/.pnp
+.pnp.*
+/coverage
+/out/
+/build
+*.pem
+npm-debug.log*
+.env*
+!.env.example
+*.tsbuildinfo
+next-env.d.ts

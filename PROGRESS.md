@@ -9,7 +9,7 @@ Constraints: logs in `.agent-logs/` are public and never edited/deleted; no app 
 | M1 Product exploration | done | 6 docs in `research/`, 28 PNGs, all doc references resolve; `research/evidence/guest-network.txt` |
 | M2 Reverse engineering | done | `research/reverse-engineering.md` (CONFIRMED/INFERRED), `research/evidence/rea-summary.json`, REA screenshot 29 |
 | M3 Strategy | in progress | `PRODUCT_STRATEGY.md` written except the 7 brief questions (brief text not in repo) |
-| M4 Architecture + scaffold | todo | |
+| M4 Architecture + scaffold | done | `ARCHITECTURE.md`; Next 16.4 scaffold; typecheck/lint/build pass; `GET /` 200 on dev |
 | M5 Primary slice | todo | |
 | M6 Polish | todo | |
 | M7 QA | todo | |
@@ -18,6 +18,8 @@ Constraints: logs in `.agent-logs/` are public and never edited/deleted; no app 
 | M10 Final verification | todo | |
 
 Decisions:
+- App name: Lumen Studio ("inspired by Higgsfield"). Pollinations anonymous serves only `sana` (flux/turbo return identical bytes; 402 on burst) -> Style presets replace a model picker (`StyleOption` instead of `ModelOption`); generation is sequential server-side; images returned as data URLs.
+- `typecheck` = `next typegen && tsc --noEmit` (LayoutProps globals come from typegen).
 - Provider: Pollinations legacy keyless endpoint (tested 200 JPEG, 2026-10-14) + labelled Demo fallback. Gemini rejected: no free API tier for image models (pricing + rate-limits pages, 2026-10-14). No {{PROVIDER_KEY}} needed.
 - REA run via `npx rea-agents@latest` (no global install) against a separate logged-out Chrome profile on 127.0.0.1:9222; `--allowed-origins` must be repeated per origin (JSON/CSV forms rejected). Took ~15 min, under the 20-min stall limit.
 - 2026-10-14: user chose NOT to pay Higgsfield (0 credits). Real generation states marked 'not tested'; guest flow + community shot detail used as evidence.
