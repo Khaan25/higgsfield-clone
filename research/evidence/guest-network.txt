@@ -1,0 +1,53 @@
+# Guest /ai/image session, Playwright Chromium 1440x900, 2026-10-14. Non-asset responses, ids collapsed, analytics keys removed.
+GET 200 https://accounts.google.com/gsi/client
+GET 200 https://accounts.google.com/gsi/fedcm.json
+GET 200 https://accounts.google.com/gsi/fedcm/listaccounts
+GET 200 https://accounts.google.com/gsi/style
+GET 200 https://app.securiti.ai/core/v1/utils/geo/location
+GET 200 https://cdn-prod.securiti.ai/consent/cookie-consent-sdk-1.150.0.js
+GET 200 https://cdn-prod.securiti.ai/consent/cookie-consent-sdk-loader.js
+GET 200 https://cdn-prod.securiti.ai/consent/cookie_banner/{id}/{id}/config_active.json
+GET 200 https://cdn-prod.securiti.ai/consent/cookie_banner/{id}/{id}/en.json
+GET 200 https://cdn.protect.clerk.com/ins_{id}/c/{id}/bootstrap.js
+GET 200 https://clerk.higgsfield.ai/npm/@clerk/clerk-js@6.32.1/dist/clerk.browser.js
+GET 200 https://clerk.higgsfield.ai/v1/client
+GET 200 https://clerk.higgsfield.ai/v1/environment
+GET 200 https://cms.higgsfield.ai/notices
+GET 200 https://fnf-api-gw.higgsfield.ai/fnf/business-unlim/state
+GET 200 https://fnf-api-gw.higgsfield.ai/fnf/datetime-settings
+GET 200 https://fnf-api-gw.higgsfield.ai/fnf/job-sets/costs
+GET 200 https://fnf-api-gw.higgsfield.ai/fnf/photo-dump/packs
+GET 200 https://fnf-api-gw.higgsfield.ai/fnf/subscriptions/v2/plans
+GET 200 https://google.com/.well-known/web-identity
+GET 200 https://higgsfield.ai/_serverFn/{id}45b67832bc72ff3bc57d1773cd66
+GET 200 https://higgsfield.ai/ai/image
+GET 200 https://higgsfield.ai/api/i/array/phc_{key}/config.js
+GET 200 https://higgsfield.ai/api/i/static/1.422.5/dead-clicks-autocapture.js
+GET 200 https://higgsfield.ai/api/i/static/1.422.5/exception-autocapture.js
+GET 200 https://higgsfield.ai/api/i/static/1.422.5/posthog-recorder.js
+GET 200 https://higgsfield.ai/api/i/static/1.422.5/surveys.js
+GET 200 https://higgsfield.ai/api/i/static/1.422.5/web-vitals-with-attribution.js
+GET 200 https://higgsfield.ai/api/route-preload-manifest
+GET 200 https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920
+GET 200 https://{probe}.client.protect.clerk.com/ins_{id}/probe
+GET 200 https://{probe}.client.protect.clerk.com:18443/ins_{id}/probe
+GET 200 https://{probe}.client.protect.clerk.com:2082/ins_{id}/probe
+GET 200 https://{probe}.client.protect.clerk.com:8443/ins_{id}/probe
+GET 200 https://{probe}.client.protect.clerk.com:992/ins_{id}/probe
+GET 401 https://fnf-api-gw.higgsfield.ai/fnf/subscriptions/bundle/unlim-catalog
+GET 401 https://fnf-api-gw.higgsfield.ai/fnf/workspaces/settings
+GET 401 https://fnf-api-gw.higgsfield.ai/fnf/workspaces/subscription
+POST 200 https://dd.higgsfield.ai/js
+POST 204 https://{probe}.client.protect.clerk.com/ins_{id}/c/{id}/probe
+
+# JS bundles: 2030 files from assets.higgsfield.ai/tanstack/assets/
+
+# Console errors
+Failed to load resource: the server responded with a status of 401 ()
+Failed to load resource: the server responded with a status of 401 ()
+Failed to load resource: the server responded with a status of 401 ()
+Failed to load resource: net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin
+Failed to load resource: the server responded with a status of 401 ()
+Failed to load resource: the server responded with a status of 401 ()
+Provider's accounts list is empty.
+[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.
