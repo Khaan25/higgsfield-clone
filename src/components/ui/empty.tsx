@@ -54,12 +54,13 @@ function EmptyMedia({
   )
 }
 
-function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
+// Lumen: "hero" is the first-screen headline of a page whose empty state is the landing view.
+function EmptyTitle({ className, size = "default", ...props }: React.ComponentProps<"div"> & { size?: "default" | "hero" }) {
   return (
     <div
       data-slot="empty-title"
       className={cn(
-        "font-heading text-sm font-medium tracking-tight",
+        size === "hero" ? "font-heading text-3xl font-semibold tracking-tight sm:text-5xl" : "font-heading text-sm font-medium tracking-tight",
         className
       )}
       {...props}

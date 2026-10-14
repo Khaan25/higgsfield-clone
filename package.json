@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.64.0",
+    "@shadcn/lint": "^0.2.1",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

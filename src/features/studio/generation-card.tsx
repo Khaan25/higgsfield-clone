@@ -74,15 +74,12 @@ export function GenerationCard({ generation, onOpenImage, onReuseSettings, onDel
                 className="max-h-175 w-full object-contain transition duration-300 group-hover:brightness-110"
               />
             </button>
-            <Button
-              variant="secondary"
-              size="icon"
-              aria-label={`Download image ${i + 1}`}
-              onClick={() => downloadImage(image, settings.prompt)}
-              className="absolute top-2 right-2 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
-            >
-              <Download />
-            </Button>
+            {/* On pointer devices the download button appears on hover or keyboard focus; on touch it is always shown. */}
+            <div className="absolute top-2 right-2 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
+              <Button variant="secondary" size="icon" aria-label={`Download image ${i + 1}`} onClick={() => downloadImage(image, settings.prompt)}>
+                <Download />
+              </Button>
+            </div>
           </div>
         ))}
       </div>

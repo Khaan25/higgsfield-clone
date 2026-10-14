@@ -26,10 +26,12 @@ interface StatusBannerProps {
 export function StatusBanner({ notice, onRetry, onUpdateKey, onDismiss }: StatusBannerProps) {
   const isDemo = notice.tone === "demo";
   return (
-    <Alert variant={isDemo ? "default" : "destructive"} role="status" data-testid={isDemo ? "fallback-banner" : "error-banner"} className="mb-4">
-      <AlertTitle className="flex items-center gap-2">
-        {isDemo && <Badge>Demo</Badge>}
-        {notice.title}.
+    <Alert variant={isDemo ? "default" : "destructive"} role="status" data-testid={isDemo ? "fallback-banner" : "error-banner"}>
+      <AlertTitle>
+        <span className="flex items-center gap-2">
+          {isDemo && <Badge>Demo</Badge>}
+          {notice.title}.
+        </span>
       </AlertTitle>
       <AlertDescription>{notice.detail}</AlertDescription>
       <AlertAction>

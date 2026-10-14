@@ -37,7 +37,9 @@ export function PendingCard({ settings }: PendingCardProps) {
       </header>
       <div className={cn("grid gap-2", settings.count > 1 ? "grid-cols-2" : "grid-cols-1")}>
         {Array.from({ length: settings.count }, (_, i) => (
-          <Skeleton key={i} className={cn("max-h-150 w-full rounded-2xl", ASPECT_BOX_CLASS[settings.aspectRatio])} />
+          <div key={i} className={cn("max-h-150 w-full overflow-hidden rounded-2xl", ASPECT_BOX_CLASS[settings.aspectRatio])}>
+            <Skeleton className="size-full" />
+          </div>
         ))}
       </div>
       <p className="mt-3 text-xs text-muted-foreground">

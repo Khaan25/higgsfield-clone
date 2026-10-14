@@ -7,3 +7,6 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Lint
+After making changes, run `npm run lint` and fix all errors. It includes `@shadcn/lint` (design-system rules for `src/**`, configured in `eslint.config.mjs`): style shadcn components through their variants, keep only layout classes in `className`, and use theme tokens instead of raw colors or arbitrary values.

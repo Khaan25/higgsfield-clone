@@ -156,7 +156,7 @@ export function Composer({ settings, onSettingsChange, onSubmit, onCancel, isGen
         placeholder="Describe an image… e.g. a lighthouse on a cliff at golden hour"
         aria-invalid={!!promptError || isOverLimit}
         aria-describedby="prompt-help"
-        className="min-h-0 resize-none border-0 bg-transparent px-1 text-base shadow-none focus-visible:ring-0 dark:bg-transparent"
+        variant="ghost"
       />
       <div id="prompt-help" className="flex min-h-5 items-center justify-between gap-3 px-1 pt-1 text-xs" aria-live="polite">
         <span className="text-destructive">{promptError}</span>

@@ -15,7 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import type { GeneratedImage, Generation, GenerationSettings } from "@/lib/schema";
 import { GenerationCard } from "./generation-card";
 import { PendingCard } from "./pending-card";
@@ -55,11 +55,18 @@ export function HistoryFeed({ history, pendingSettings, onOpenImage, onReuseSett
         <div className="mb-4 flex items-center gap-3">
           <h2 className="font-heading text-lg font-semibold whitespace-nowrap">Your images</h2>
           <span className="hidden text-xs text-muted-foreground sm:inline">{history.length} saved on this device</span>
-          <label className="relative ml-auto w-44 sm:w-64">
-            <span className="sr-only">Search your images by prompt</span>
-            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search prompts" className="pl-8" />
-          </label>
+          <InputGroup className="ml-auto w-44 sm:w-64">
+            <InputGroupAddon>
+              <Search aria-hidden />
+            </InputGroupAddon>
+            <InputGroupInput
+              type="search"
+              aria-label="Search your images by prompt"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search prompts"
+            />
+          </InputGroup>
         </div>
       )}
 

@@ -45,8 +45,10 @@ export function KeyDialog({ currentKey, onSave, onClose }: KeyDialogProps) {
       <DialogContent>
         <form onSubmit={save} className="flex flex-col gap-4">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <KeyRound className="text-primary" aria-hidden /> Use your own Gemini key
+            <DialogTitle>
+              <span className="flex items-center gap-2">
+                <KeyRound className="text-primary" aria-hidden /> Use your own Gemini key
+              </span>
             </DialogTitle>
             <DialogDescription>
               Unlocks Google&apos;s Nano Banana image models. You pay Google directly at their per-image price. Image models need a key with billing enabled.
@@ -67,7 +69,6 @@ export function KeyDialog({ currentKey, onSave, onClose }: KeyDialogProps) {
                 }}
                 placeholder="Paste your key"
                 aria-invalid={!!error}
-                className="font-mono"
               />
               {error && <FieldError>{error}</FieldError>}
               <FieldDescription>

@@ -31,12 +31,14 @@ export function Studio() {
 
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-4 pb-72">
           {studio.notice && (
-            <StatusBanner
-              notice={studio.notice}
-              onRetry={studio.retryFromNotice}
-              onUpdateKey={studio.openKeyDialog}
-              onDismiss={studio.dismissNotice}
-            />
+            <div className="mb-4">
+              <StatusBanner
+                notice={studio.notice}
+                onRetry={studio.retryFromNotice}
+                onUpdateKey={studio.openKeyDialog}
+                onDismiss={studio.dismissNotice}
+              />
+            </div>
           )}
           {isEmpty && (
             <EmptyState

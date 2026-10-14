@@ -56,12 +56,12 @@ export function Lightbox({ generation, image, onClose, onReuseSettings, onMakeVa
 
   return (
     <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="flex h-dvh w-screen max-w-none flex-col gap-0 rounded-none p-0 sm:max-w-none lg:flex-row">
+      <DialogContent variant="fullscreen">
         <div className="flex min-h-0 flex-1 items-center justify-center bg-background p-4 lg:p-8">
           {/* eslint-disable-next-line @next/next/no-img-element -- data: URLs can't go through next/image */}
           <img src={image.src} alt={settings.prompt} className="max-h-full max-w-full rounded-xl object-contain" />
         </div>
-        <aside className="flex max-h-[45dvh] w-full shrink-0 flex-col gap-4 overflow-y-auto border-t p-5 lg:max-h-none lg:w-96 lg:border-t-0 lg:border-l">
+        <aside className="flex max-h-96 w-full shrink-0 flex-col gap-4 overflow-y-auto border-t p-5 lg:max-h-none lg:w-96 lg:border-t-0 lg:border-l">
           <DialogTitle>Image details</DialogTitle>
           <DialogDescription className="sr-only">Prompt, source and settings for this image, with actions to reuse it.</DialogDescription>
           <section className="flex flex-col gap-1.5">
@@ -74,9 +74,9 @@ export function Lightbox({ generation, image, onClose, onReuseSettings, onMakeVa
             </div>
             <p className="rounded-xl bg-muted p-3 text-sm leading-relaxed">{settings.prompt}</p>
           </section>
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+          <dl className="flex flex-col gap-1.5 text-sm">
             {details.map(([term, value]) => (
-              <div key={term} className="contents">
+              <div key={term} className="flex justify-between gap-4">
                 <dt className="text-muted-foreground">{term}</dt>
                 <dd className="text-right">{value}</dd>
               </div>
