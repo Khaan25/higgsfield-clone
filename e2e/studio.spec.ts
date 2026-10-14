@@ -108,6 +108,19 @@ test("history: persists across reload, search and delete", async ({ page }) => {
   await expect(page.getByTestId("generation")).toHaveCount(1);
 });
 
+test("corrupted or outdated saved history is dropped, not rendered", async ({ page }) => {
+  await page.evaluate(() => {
+    const legacy = { id: "old-1", settings: { prompt: "saved before models existed", styleId: "none", aspectRatio: "1:1", count: 1 }, images: [{ id: "i", src: "/demo/square-1.jpg", width: 1024, height: 1024, seed: 0 }], source: "demo", model: "Demo", createdAt: "2026-10-14T10:00:00.000Z" };
+    localStorage.setItem("lumen:history", JSON.stringify([legacy, { id: 42, junk: true }, "nonsense"]));
+    localStorage.setItem("lumen:draft", "{not json");
+  });
+  await page.reload();
+  // The legacy entry is migrated (modelId defaults to free); the junk entries are skipped.
+  await expect(page.getByTestId("generation")).toHaveCount(1);
+  await expect(page.getByTestId("generation")).toContainText("saved before models existed");
+  await expect(page.getByLabel("Describe your image")).toHaveValue("");
+});
+
 test("fallback banner explains a rate limit and offers retry", async ({ page }) => {
   await page.route("**/api/generate", (r) =>
     r.fulfill({ json: { error: { kind: "rate_limited", message: "The free image provider is rate-limiting requests.", retryAfter: 30 } } }),

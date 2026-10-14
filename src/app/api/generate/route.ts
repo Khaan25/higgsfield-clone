@@ -1,57 +1,56 @@
-import { LIVE_MODEL } from "@/lib/catalog";
-import { generateOne, ProviderError } from "@/lib/provider";
-import type { GenerateError, GeneratedImage, Generation } from "@/lib/types";
-import { parseSettings } from "@/lib/validate";
+import { GenerationError, runSequentialBatch } from "@/lib/batch";
+import { FREE_MODEL, getModelLabel } from "@/lib/catalog";
+import { generatePollinationsImage } from "@/lib/pollinations";
+import { settingsSchema, type GenerateError, type Generation } from "@/lib/schema";
 
 export const maxDuration = 60;
+
 const IMAGE_TIMEOUT_MS = 25_000;
-const BUDGET_MS = 50_000; // stays under maxDuration even for a batch of 4
+// Leaves headroom under maxDuration even for a batch of 4.
+const BATCH_BUDGET_MS = 50_000;
 
 /**
- * Provider failures are an expected outcome (the client falls back to Demo), so they return 200 with a typed
- * `error` body: a 4xx/5xx would print a red "Failed to load resource" in every visitor's console.
- * Only malformed requests, which the composer already prevents, get a real 400.
+ * Provider failures are an expected outcome (the client falls back to labelled Demo images), so they
+ * return 200 with a typed `error` body: a 4xx/5xx would print a red "Failed to load resource" in every
+ * visitor's console. Only malformed requests, which the composer already prevents, get a real 400.
  */
-const fail = (error: GenerateError) => Response.json({ error }, { status: error.kind === "invalid" ? 400 : 200 });
+const respondWithError = (error: GenerateError) => Response.json({ error }, { status: error.kind === "invalid" ? 400 : 200 });
 
+/**
+ * POST /api/generate runs the free model for a batch of images.
+ * Body: GenerationSettings. Response: `{ generation }` or `{ error }` (see generateResponseSchema).
+ * Gemini (bring-your-own-key) never comes through here; it runs in the browser so the key stays there.
+ */
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
-  const parsed = parseSettings(body);
-  if (!parsed.ok) return fail({ kind: "invalid", message: parsed.message });
-  const { settings } = parsed;
+  const parsed = settingsSchema.safeParse(body);
+  if (!parsed.success) return respondWithError({ kind: "invalid", message: parsed.error.issues[0].message });
+  // The server only runs the free model, whatever the client sent.
+  const settings = { ...parsed.data, modelId: FREE_MODEL };
 
   if (process.env.GENERATION_MODE === "demo") {
-    return fail({ kind: "provider_error", message: "Live generation is switched off on this deployment." });
+    return respondWithError({ kind: "provider_error", message: "Live generation is switched off on this deployment." });
   }
 
-  // Sequential on purpose: the anonymous provider tier rejects concurrent requests from one IP.
-  const images: GeneratedImage[] = [];
-  let lastError: GenerateError | undefined;
-  const deadline = Date.now() + BUDGET_MS;
-  for (let i = 0; i < settings.count; i++) {
-    const remaining = deadline - Date.now();
-    if (remaining < 5_000) {
-      lastError = { kind: "timeout", message: "Ran out of time for the rest of the batch." };
-      break;
-    }
-    try {
-      images.push(await generateOne(settings, Math.floor(Math.random() * 1_000_000), Math.min(IMAGE_TIMEOUT_MS, remaining)));
-    } catch (e) {
-      if (!(e instanceof ProviderError)) throw e;
-      lastError = e.info;
-      break;
-    }
+  try {
+    const { images, notice } = await runSequentialBatch({
+      count: settings.count,
+      imageTimeoutMs: IMAGE_TIMEOUT_MS,
+      budgetMs: BATCH_BUDGET_MS,
+      generateImage: (timeoutMs) => generatePollinationsImage(settings, Math.floor(Math.random() * 1_000_000), timeoutMs),
+    });
+    const generation: Generation = {
+      id: crypto.randomUUID(),
+      settings,
+      images,
+      source: "live",
+      model: getModelLabel(FREE_MODEL),
+      createdAt: new Date().toISOString(),
+      notice,
+    };
+    return Response.json({ generation });
+  } catch (e) {
+    if (e instanceof GenerationError) return respondWithError(e.info);
+    throw e;
   }
-  if (!images.length) return fail(lastError!);
-
-  const generation: Generation = {
-    id: crypto.randomUUID(),
-    settings,
-    images,
-    source: "live",
-    model: LIVE_MODEL,
-    createdAt: new Date().toISOString(),
-    notice: images.length < settings.count ? `${images.length} of ${settings.count} generated. ${lastError?.message}` : undefined,
-  };
-  return Response.json({ generation });
 }

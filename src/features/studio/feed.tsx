@@ -3,9 +3,9 @@
 import { Download, RotateCcw, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
-import { aspectById, FREE_MODEL, GEMINI_MODELS, styleById } from "@/lib/catalog";
-import { EXAMPLES } from "@/lib/demo";
-import type { GeneratedImage, Generation, GenerationSettings } from "@/lib/types";
+import { aspectById, getModelShortLabel, styleById } from "@/lib/catalog";
+import { EXAMPLES } from "@/lib/generators";
+import type { GeneratedImage, Generation, GenerationSettings } from "@/lib/schema";
 
 export function downloadImage(img: GeneratedImage, prompt: string) {
   const a = document.createElement("a");
@@ -102,7 +102,7 @@ export function GenerationCard({
             )}
             {gen.source === "live" && (
               <>
-                <span>{!gen.settings.modelId || gen.settings.modelId === FREE_MODEL ? "Free · Sana" : (GEMINI_MODELS.find((m) => m.id === gen.settings.modelId)?.label ?? "Gemini")}</span>·
+                <span>{getModelShortLabel(gen.settings.modelId)}</span>·
               </>
             )}
             <span>{style?.label}</span>·<span>{gen.settings.aspectRatio}</span>·

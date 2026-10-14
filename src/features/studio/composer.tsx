@@ -4,7 +4,7 @@ import { Cpu, Minus, Palette, Plus, Sparkles, Square } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { Menu } from "@/components/ui/menu";
 import { ASPECTS, COUNT_MAX, FREE_MODEL, GEMINI_MODELS, PROMPT_MAX, STYLES } from "@/lib/catalog";
-import type { AspectRatio, GenerationSettings } from "@/lib/types";
+import type { AspectRatio, GenerationSettings } from "@/lib/schema";
 
 function RatioIcon({ ratio }: { ratio: AspectRatio }) {
   const a = ASPECTS.find((x) => x.id === ratio)!;
@@ -97,7 +97,7 @@ export function Composer({
           label="Style"
           heading="Style · adds to your prompt"
           value={settings.styleId}
-          onChange={(styleId) => onChange({ styleId })}
+          onChange={(styleId) => onChange({ styleId: styleId as GenerationSettings["styleId"] })}
           icon={<Palette className="size-4 text-muted" aria-hidden />}
           options={STYLES.map((s) => ({ id: s.id, label: s.label, hint: s.bestFor }))}
         />

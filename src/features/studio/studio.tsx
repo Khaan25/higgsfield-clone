@@ -5,15 +5,15 @@ import Link from "next/link";
 import { AnimatePresence, MotionConfig } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DEFAULT_SETTINGS, FREE_MODEL } from "@/lib/catalog";
-import { demoGeneration } from "@/lib/demo";
-import { GeminiError, generateWithGemini } from "@/lib/gemini";
-import type { GenerateError, GeneratedImage, Generation, GenerationSettings } from "@/lib/types";
-import { promptError } from "@/lib/validate";
+import { createDemoGeneration as demoGeneration, createGenerator } from "@/lib/generators";
+import { GenerationError } from "@/lib/batch";
+import type { GenerateError, GeneratedImage, Generation, GenerationSettings } from "@/lib/schema";
+import { getPromptError as promptError } from "@/lib/schema";
 import { Composer } from "./composer";
 import { EmptyState, GenerationCard, PendingCard } from "./feed";
 import { KeyDialog } from "./key-dialog";
 import { Lightbox } from "./lightbox";
-import { loadDraft, loadHistory, loadKey, saveDraft, saveHistory, saveKey } from "./storage";
+import { loadDraft, loadHistory, loadApiKey, saveDraft, saveHistory, saveApiKey } from "./storage";
 
 const REPO_URL = "https://github.com/Khaan25/higgsfield-clone";
 
@@ -57,7 +57,7 @@ export function Studio() {
     // Hydrate from localStorage after mount so server and client render the same first frame.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHistory(loadHistory());
-    setApiKey(loadKey());
+    setApiKey(loadApiKey());
     const draft = loadDraft();
     if (draft) setSettings({ ...DEFAULT_SETTINGS, ...draft });
     setHydrated(true);
@@ -100,43 +100,21 @@ export function Studio() {
     window.scrollTo({ top: 0, behavior: "smooth" });
 
     let result: Generation;
-    if (s.modelId !== FREE_MODEL) {
-      // Bring-your-own-key path: browser → Google. Failures here are the visitor's to fix, so no demo stand-in.
-      try {
-        if (!apiKey) throw new GeminiError({ kind: "auth", message: "Add your Gemini API key to use Gemini models." });
-        result = await generateWithGemini(apiKey.key, s, controller.signal);
-      } catch (e) {
-        if (controller.signal.aborted) return;
-        const info = e instanceof GeminiError ? e.info : { kind: "provider_error" as const, message: String(e) };
-        setBanner({ tone: "error", title: info.kind === "auth" ? "Gemini key problem" : "Gemini couldn't generate this", detail: info.message, retry: { ...s, modelId: FREE_MODEL } });
-        return;
-      } finally {
-        setPending(null);
-        abort.current = null;
-      }
-      setHistory((h) => saveHistory([result, ...h]));
-      return;
-    }
+    const generator = createGenerator(s.modelId, { apiKey: apiKey?.key });
     try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(s),
-        signal: controller.signal,
-      });
-      const body = (await res.json()) as { generation?: Generation; error?: GenerateError };
-      if (body.generation) {
-        result = body.generation;
-      } else if (body.error?.kind === "invalid") {
-        setError(body.error.message);
-        return;
-      } else {
-        setBanner(fallbackBanner(body.error ?? { kind: "provider_error", message: `HTTP ${res.status}` }, s));
-        result = demoGeneration(s, "Demo result: sample images, not generated from this prompt.");
-      }
+      result = await generator.generate(s, controller.signal);
     } catch (e) {
       if (controller.signal.aborted) return;
-      setBanner(fallbackBanner({ kind: "provider_error", message: String(e) }, s));
+      const info: GenerateError = e instanceof GenerationError ? e.info : { kind: "provider_error", message: String(e) };
+      if (info.kind === "invalid") {
+        setError(info.message);
+        return;
+      }
+      if (generator.onFailure === "report") {
+        setBanner({ tone: "error", title: info.kind === "auth" ? "Gemini key problem" : "Gemini couldn't generate this", detail: info.message, retry: { ...s, modelId: FREE_MODEL } });
+        return;
+      }
+      setBanner(fallbackBanner(info, s));
       result = demoGeneration(s, "Demo result: sample images, not generated from this prompt.");
     } finally {
       setPending(null);
@@ -292,7 +270,7 @@ export function Studio() {
             current={apiKey}
             onClose={() => setKeyDialog(null)}
             onSave={(key, remember) => {
-              saveKey(key, remember);
+              saveApiKey(key, remember);
               setApiKey(key ? { key, remember } : null);
               if (key && keyDialog.pendingModel) setSettings((s) => ({ ...s, modelId: keyDialog.pendingModel! }));
               if (!key) setSettings((s) => ({ ...s, modelId: FREE_MODEL }));

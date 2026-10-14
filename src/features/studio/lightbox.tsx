@@ -3,7 +3,7 @@
 import { Check, Copy, Download, RotateCcw, Shuffle, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { styleById } from "@/lib/catalog";
-import type { GeneratedImage, Generation } from "@/lib/types";
+import type { GeneratedImage, Generation } from "@/lib/schema";
 import { downloadImage } from "./feed";
 
 export function Lightbox({
