@@ -14,7 +14,7 @@ Constraints: logs in `.agent-logs/` are public and never edited/deleted; no app 
 | BYOK (user request) | done | Gemini key dialog (session-only by default), model picker, browser→Google call, typed key/quota errors; mocked test: bad key banner, success card, 0 server calls, key only in sessionStorage |
 | M6 Polish | done | mobile lightbox actions pinned, mobile header/history heading tightened; `research/screenshots/compare-1..5-*.png` (Higgsfield vs Lumen, captions match evidence) |
 | M7 QA | done | `e2e/studio.spec.ts`: 7 tests × desktop 1440x900 + mobile 390x844 = 14 passed; console-error fixture; `typecheck && lint && build && test:e2e` exit 0. Found + fixed: icon-only Source link had no accessible name on mobile |
-| M8 Publish | todo | |
+| M8 Publish | done | secret scan of `git log -p` clean; repo https://github.com/Khaan25/higgsfield-clone PUBLIC; prod https://higgsfield-clone-zeta.vercel.app (/ 200, live gen 200 in ~11s); `e2e/production.spec.ts` 2/2 passed fresh context (desktop live, mobile rate-limited -> labelled Demo); README |
 | M9 Walkthrough | todo | |
 | M10 Final verification | todo | |
 
@@ -33,4 +33,4 @@ Decisions:
 
 Blockers: none. (Brief received 2026-10-14; it has no numbered questions/points, so the 7 questions and walkthrough points are derived from its judging criteria and hand-in checklist.)
 
-Next action: M8 — secret scan, `gh repo create Khaan25/higgsfield-clone --public --source . --push`, `npx vercel@latest --prod`, verify prod in fresh Playwright context, README.
+Next action: M9 — `WALKTHROUGH.md` (<=750 words, strongest moment first), then M10 full verification + checks.md.
