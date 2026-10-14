@@ -7,13 +7,12 @@ export const maxDuration = 60;
 const IMAGE_TIMEOUT_MS = 25_000;
 const BUDGET_MS = 50_000; // stays under maxDuration even for a batch of 4
 
-const STATUS: Record<GenerateError["kind"], number> = { invalid: 400, rate_limited: 429, provider_error: 502, timeout: 504 };
-
-const fail = (error: GenerateError) =>
-  Response.json(error, {
-    status: STATUS[error.kind],
-    headers: error.retryAfter ? { "Retry-After": String(error.retryAfter) } : undefined,
-  });
+/**
+ * Provider failures are an expected outcome (the client falls back to Demo), so they return 200 with a typed
+ * `error` body: a 4xx/5xx would print a red "Failed to load resource" in every visitor's console.
+ * Only malformed requests, which the composer already prevents, get a real 400.
+ */
+const fail = (error: GenerateError) => Response.json({ error }, { status: error.kind === "invalid" ? 400 : 200 });
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -54,5 +53,5 @@ export async function POST(request: Request) {
     createdAt: new Date().toISOString(),
     notice: images.length < settings.count ? `${images.length} of ${settings.count} generated. ${lastError?.message}` : undefined,
   };
-  return Response.json(generation);
+  return Response.json({ generation });
 }

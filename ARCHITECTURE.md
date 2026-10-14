@@ -36,12 +36,11 @@ The plan named a `ModelOption` type. I replaced it with `StyleOption` because th
    - count is 1–4
    - Failure returns `400 {kind:"invalid"}`.
 2. For i in 1..count, **one at a time** (the anonymous provider rate-limits concurrent calls), call the provider with a random seed and a 45s `AbortSignal.timeout`.
-3. Any image succeeded: return `200 Generation` with `source:"live"`. The images are base64 `data:` URLs, so the browser never calls the provider and nothing goes stale. A partial batch sets `notice`.
-4. None succeeded: return a typed error.
-   - 402/429 → `rate_limited`, passing `Retry-After` through if present.
+3. Any image succeeded: return `200 {generation}` with `source:"live"`. The images are base64 `data:` URLs, so the browser never calls the provider and nothing goes stale. A partial batch sets `notice`.
+4. None succeeded: return `200 {error}` with a typed error. It is a 200 because the fallback is an expected outcome; a 4xx/5xx makes the browser log a red console error on every fallback. Malformed input (`invalid`) is the only real 400.
+   - 402/429 → `rate_limited`, with the `Retry-After` value carried in the error body as `retryAfter` if present.
    - Other non-2xx or a non-image body → `provider_error`.
    - Abort → `timeout`.
-   - Status is 429, 502 or 504.
 5. `GENERATION_MODE=demo` forces demo mode (used by the e2e tests and as an escape hatch).
 
 ## Provider (`src/lib/provider.ts`)
