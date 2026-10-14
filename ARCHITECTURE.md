@@ -70,3 +70,22 @@ The plan named a `ModelOption` type. I replaced it with `StyleOption` because th
   - `lumen:history`: `Generation[]`, newest first
 - On `QuotaExceededError` the oldest generations are evicted until the write fits. Every access is wrapped in try/catch, and the app works without storage.
 - History actions: search by prompt, Reuse settings, Download, Delete, Clear all.
+
+## Bring your own key (Gemini), `src/lib/gemini.ts` + `src/features/studio/key-dialog.tsx`
+- **Where the key lives.** A visitor can paste their own Gemini API key. It is stored in `sessionStorage` by default, or in `localStorage` only if they tick "Remember on this device". It is held in React state.
+- **The call goes browser → Google, never through our server.** It is `POST https://generativelanguage.googleapis.com/v1beta/interactions` with header `x-goog-api-key` and body `{model, input:[{type:"text"}], response_format:{type:"image", mime_type, aspect_ratio}}`.
+  - Google's endpoint allows cross-origin requests (preflight checked 2026-10-14).
+  - `/api/generate` is never called on this path; the e2e test asserts this.
+- **Models (checked 2026-10-14):**
+  - `gemini-3.1-flash-lite-image`
+  - `gemini-3.1-flash-image`
+  - `gemini-nano-banana-2.1`
+  - `gemini-3-pro-image`
+
+  Picking one without a key opens the key dialog.
+- **Response parsing.** The REST response shape isn't documented beyond the SDK's `output_image`, so `findImage()` takes the last block that has an `image/*` `mime_type` or `mimeType` and base64 `data`. This is unverified against a real key; mocked shapes are covered in e2e.
+- **Error mapping:**
+  - 400 "API key not valid", 401 or 403 → `auth`
+  - 429 → `rate_limited` (free-tier keys usually have no image quota)
+  - 404 → model unavailable
+- **Failures on this path show a red banner instead of demo images,** because the visitor can fix them. It offers "Update key" and "Use free model instead".

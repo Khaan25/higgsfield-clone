@@ -1,4 +1,4 @@
-import { aspectById, styleById } from "./catalog";
+import { aspectById, buildPrompt } from "./catalog";
 import type { GenerateError, GeneratedImage, GenerationSettings } from "./types";
 
 const ENDPOINT = "https://image.pollinations.ai/prompt/";
@@ -7,11 +7,6 @@ export class ProviderError extends Error {
   constructor(public readonly info: GenerateError) {
     super(info.message);
   }
-}
-
-export function buildPrompt(s: GenerationSettings) {
-  const suffix = styleById(s.styleId)?.promptSuffix;
-  return suffix ? `${s.prompt}, ${suffix}` : s.prompt;
 }
 
 /** Server-only (imported by the API route). One image from the keyless Pollinations endpoint, returned as a data URL so the browser never calls the provider. */

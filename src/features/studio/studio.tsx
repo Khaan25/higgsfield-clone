@@ -1,21 +1,24 @@
 "use client";
 
-import { Code2, Search, X } from "lucide-react";
+import { Code2, KeyRound, Search, X } from "lucide-react";
 import Link from "next/link";
 import { AnimatePresence, MotionConfig } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { DEFAULT_SETTINGS } from "@/lib/catalog";
+import { DEFAULT_SETTINGS, FREE_MODEL } from "@/lib/catalog";
 import { demoGeneration } from "@/lib/demo";
+import { GeminiError, generateWithGemini } from "@/lib/gemini";
 import type { GenerateError, GeneratedImage, Generation, GenerationSettings } from "@/lib/types";
 import { promptError } from "@/lib/validate";
 import { Composer } from "./composer";
 import { EmptyState, GenerationCard, PendingCard } from "./feed";
+import { KeyDialog } from "./key-dialog";
 import { Lightbox } from "./lightbox";
-import { loadDraft, loadHistory, saveDraft, saveHistory } from "./storage";
+import { loadDraft, loadHistory, loadKey, saveDraft, saveHistory, saveKey } from "./storage";
 
 const REPO_URL = "https://github.com/Khaan25/higgsfield-clone";
 
 interface Banner {
+  tone: "demo" | "error";
   title: string;
   detail: string;
   retry?: GenerationSettings;
@@ -29,6 +32,7 @@ function fallbackBanner(err: GenerateError, settings: GenerationSettings): Banne
         ? "The free image provider timed out."
         : "Live generation isn't available right now.";
   return {
+    tone: "demo",
     title: "Showing demo images",
     detail: `${why} These are labelled sample images, not generated from your prompt.${err.retryAfter ? ` Try again in about ${err.retryAfter}s.` : ""}`,
     retry: settings,
@@ -44,6 +48,8 @@ export function Studio() {
   const [banner, setBanner] = useState<Banner | null>(null);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState<{ gen: Generation; image: GeneratedImage } | null>(null);
+  const [apiKey, setApiKey] = useState<{ key: string; remember: boolean } | null>(null);
+  const [keyDialog, setKeyDialog] = useState<{ pendingModel?: string } | null>(null);
   const abort = useRef<AbortController | null>(null);
   const promptRef = useRef<HTMLElement | null>(null);
 
@@ -51,6 +57,7 @@ export function Studio() {
     // Hydrate from localStorage after mount so server and client render the same first frame.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHistory(loadHistory());
+    setApiKey(loadKey());
     const draft = loadDraft();
     if (draft) setSettings({ ...DEFAULT_SETTINGS, ...draft });
     setHydrated(true);
@@ -63,6 +70,10 @@ export function Studio() {
   const commitHistory = useCallback((next: Generation[]) => setHistory(saveHistory(next)), []);
 
   const update = (patch: Partial<GenerationSettings>) => {
+    if (patch.modelId && patch.modelId !== FREE_MODEL && !apiKey) {
+      setKeyDialog({ pendingModel: patch.modelId });
+      return;
+    }
     setSettings((s) => ({ ...s, ...patch }));
     if ("prompt" in patch) setError(null);
   };
@@ -89,6 +100,23 @@ export function Studio() {
     window.scrollTo({ top: 0, behavior: "smooth" });
 
     let result: Generation;
+    if (s.modelId !== FREE_MODEL) {
+      // Bring-your-own-key path: browser → Google. Failures here are the visitor's to fix, so no demo stand-in.
+      try {
+        if (!apiKey) throw new GeminiError({ kind: "auth", message: "Add your Gemini API key to use Gemini models." });
+        result = await generateWithGemini(apiKey.key, s, controller.signal);
+      } catch (e) {
+        if (controller.signal.aborted) return;
+        const info = e instanceof GeminiError ? e.info : { kind: "provider_error" as const, message: String(e) };
+        setBanner({ tone: "error", title: info.kind === "auth" ? "Gemini key problem" : "Gemini couldn't generate this", detail: info.message, retry: { ...s, modelId: FREE_MODEL } });
+        return;
+      } finally {
+        setPending(null);
+        abort.current = null;
+      }
+      setHistory((h) => saveHistory([result, ...h]));
+      return;
+    }
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -118,7 +146,7 @@ export function Studio() {
   };
 
   const reuse = (gen: Generation) => {
-    setSettings(gen.settings);
+    setSettings({ ...DEFAULT_SETTINGS, ...gen.settings });
     setOpen(null);
     focusPrompt();
   };
@@ -141,7 +169,16 @@ export function Studio() {
               Lumen
             </Link>
             <span className="hidden text-xs text-muted sm:inline">AI image studio · inspired by Higgsfield</span>
-            <a href={REPO_URL} target="_blank" rel="noreferrer" className="ml-auto flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-muted hover:text-fg">
+            <button
+              type="button"
+              onClick={() => setKeyDialog({})}
+              className="ml-auto flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-sm text-muted hover:text-fg"
+            >
+              <KeyRound className="size-4" aria-hidden />
+              <span>{apiKey ? "Gemini key" : "Use your Gemini key"}</span>
+              {apiKey && <span className="size-1.5 rounded-full bg-emerald-400" aria-label="(saved)" />}
+            </button>
+            <a href={REPO_URL} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-muted hover:text-fg">
               <Code2 className="size-4" aria-hidden />
               <span className="hidden sm:inline">Source</span>
             </a>
@@ -150,14 +187,30 @@ export function Studio() {
 
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-72 pt-4">
           {banner && (
-            <div role="status" className="mb-4 flex flex-wrap items-start gap-3 rounded-2xl border border-accent/30 bg-accent/10 p-3 text-sm sm:items-center" data-testid="fallback-banner">
-              <span className="rounded-md bg-accent px-1.5 py-0.5 text-xs font-bold uppercase text-accent-fg">Demo</span>
+            <div
+              role="status"
+              data-testid={banner.tone === "demo" ? "fallback-banner" : "error-banner"}
+              className={`mb-4 flex flex-wrap items-start gap-3 rounded-2xl border p-3 text-sm sm:items-center ${banner.tone === "demo" ? "border-accent/30 bg-accent/10" : "border-danger/40 bg-danger/10"}`}
+            >
+              {banner.tone === "demo" && <span className="rounded-md bg-accent px-1.5 py-0.5 text-xs font-bold uppercase text-accent-fg">Demo</span>}
               <p className="min-w-0 flex-1">
                 <strong className="font-semibold">{banner.title}.</strong> <span className="text-fg/80">{banner.detail}</span>
               </p>
+              {banner.tone === "error" && (
+                <button type="button" onClick={() => setKeyDialog({})} className="rounded-lg border border-line px-3 py-1 text-xs font-semibold hover:bg-surface-2">
+                  Update key
+                </button>
+              )}
               {banner.retry && (
-                <button type="button" onClick={() => generate(banner.retry)} className="rounded-lg border border-accent/40 px-3 py-1 text-xs font-semibold text-accent hover:bg-accent/10">
-                  Retry live
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSettings(banner.retry!);
+                    generate(banner.retry);
+                  }}
+                  className="rounded-lg border border-accent/40 px-3 py-1 text-xs font-semibold text-accent hover:bg-accent/10"
+                >
+                  {banner.tone === "demo" ? "Retry live" : "Use free model instead"}
                 </button>
               )}
               <button type="button" onClick={() => setBanner(null)} aria-label="Dismiss notice" className="text-muted hover:text-fg">
@@ -224,12 +277,27 @@ export function Studio() {
 
         <div className="fixed inset-x-0 bottom-0 z-20 bg-gradient-to-t from-bg via-bg/90 to-transparent px-3 pb-3 pt-8 sm:pb-5">
           <div className="mx-auto max-w-3xl">
-            <Composer settings={settings} onChange={update} onSubmit={() => generate()} onCancel={() => abort.current?.abort()} busy={!!pending} error={error} />
+            <Composer settings={settings} onChange={update} onSubmit={() => generate()} onCancel={() => abort.current?.abort()} busy={!!pending} error={error} hasKey={!!apiKey} />
             <p className="mt-2 text-center text-[11px] text-muted/70">
-              Live images by Pollinations (free tier). When it is busy you get clearly labelled demo images instead.
+              {settings.modelId === FREE_MODEL
+                ? "Free model by Pollinations. When it is busy you get clearly labelled demo images instead."
+                : "Generating with your Gemini key: billed by Google, sent from your browser straight to Google."}
             </p>
           </div>
         </div>
+
+        {keyDialog && (
+          <KeyDialog
+            current={apiKey}
+            onClose={() => setKeyDialog(null)}
+            onSave={(key, remember) => {
+              saveKey(key, remember);
+              setApiKey(key ? { key, remember } : null);
+              if (key && keyDialog.pendingModel) setSettings((s) => ({ ...s, modelId: keyDialog.pendingModel! }));
+              if (!key) setSettings((s) => ({ ...s, modelId: FREE_MODEL }));
+            }}
+          />
+        )}
 
         {open && (
           <Lightbox

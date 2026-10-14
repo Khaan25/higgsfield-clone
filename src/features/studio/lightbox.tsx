@@ -43,7 +43,7 @@ export function Lightbox({
     ["Style", styleById(gen.settings.styleId)?.label ?? "-"],
     ["Aspect", gen.settings.aspectRatio],
     ["Size", `${image.width}×${image.height}`],
-    ["Seed", gen.source === "demo" ? "-" : String(image.seed)],
+    ["Seed", gen.source === "demo" || !image.seed ? "-" : String(image.seed)],
     ["Created", new Date(gen.createdAt).toLocaleString()],
   ];
 

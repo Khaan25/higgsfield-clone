@@ -9,6 +9,8 @@ export interface StyleOption {
 
 export interface GenerationSettings {
   prompt: string;
+  /** "free" (server → Pollinations) or a Gemini model id (browser → Google with the visitor's own key). */
+  modelId: string;
   styleId: string;
   aspectRatio: AspectRatio;
   count: number;
@@ -32,7 +34,7 @@ export interface Generation {
   notice?: string;
 }
 
-export type GenerateErrorKind = "invalid" | "rate_limited" | "provider_error" | "timeout";
+export type GenerateErrorKind = "invalid" | "auth" | "rate_limited" | "provider_error" | "timeout";
 
 export interface GenerateError {
   kind: GenerateErrorKind;

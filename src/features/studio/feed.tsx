@@ -3,7 +3,7 @@
 import { Download, RotateCcw, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
-import { aspectById, styleById } from "@/lib/catalog";
+import { aspectById, FREE_MODEL, GEMINI_MODELS, styleById } from "@/lib/catalog";
 import { EXAMPLES } from "@/lib/demo";
 import type { GeneratedImage, Generation, GenerationSettings } from "@/lib/types";
 
@@ -99,6 +99,11 @@ export function GenerationCard({
               <span className="rounded-md bg-accent/15 px-1.5 py-0.5 font-semibold uppercase tracking-wide text-accent">Demo</span>
             ) : (
               <span className="rounded-md bg-emerald-400/10 px-1.5 py-0.5 font-semibold uppercase tracking-wide text-emerald-300">Live</span>
+            )}
+            {gen.source === "live" && (
+              <>
+                <span>{!gen.settings.modelId || gen.settings.modelId === FREE_MODEL ? "Free · Sana" : (GEMINI_MODELS.find((m) => m.id === gen.settings.modelId)?.label ?? "Gemini")}</span>·
+              </>
             )}
             <span>{style?.label}</span>·<span>{gen.settings.aspectRatio}</span>·
             <time dateTime={gen.createdAt}>{new Date(gen.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>

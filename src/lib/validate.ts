@@ -20,5 +20,5 @@ export function parseSettings(body: unknown): { ok: true; settings: GenerationSe
   if (typeof b.aspectRatio !== "string" || !aspectById(b.aspectRatio)) return { ok: false, message: "Unknown aspect ratio." };
   const count = Number(b.count);
   if (!Number.isInteger(count) || count < 1 || count > COUNT_MAX) return { ok: false, message: `Count must be 1–${COUNT_MAX}.` };
-  return { ok: true, settings: { prompt: prompt.trim(), styleId: b.styleId, aspectRatio: b.aspectRatio as AspectRatio, count } };
+  return { ok: true, settings: { prompt: prompt.trim(), modelId: "free", styleId: b.styleId, aspectRatio: b.aspectRatio as AspectRatio, count } };
 }

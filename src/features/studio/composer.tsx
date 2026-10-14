@@ -1,9 +1,9 @@
 "use client";
 
-import { Minus, Palette, Plus, Sparkles, Square } from "lucide-react";
+import { Cpu, Minus, Palette, Plus, Sparkles, Square } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { Menu } from "@/components/ui/menu";
-import { ASPECTS, COUNT_MAX, PROMPT_MAX, STYLES } from "@/lib/catalog";
+import { ASPECTS, COUNT_MAX, FREE_MODEL, GEMINI_MODELS, PROMPT_MAX, STYLES } from "@/lib/catalog";
 import type { AspectRatio, GenerationSettings } from "@/lib/types";
 
 function RatioIcon({ ratio }: { ratio: AspectRatio }) {
@@ -23,6 +23,7 @@ export function Composer({
   onCancel,
   busy,
   error,
+  hasKey,
 }: {
   settings: GenerationSettings;
   onChange: (patch: Partial<GenerationSettings>) => void;
@@ -30,6 +31,7 @@ export function Composer({
   onCancel: () => void;
   busy: boolean;
   error: string | null;
+  hasKey: boolean;
 }) {
   const ta = useRef<HTMLTextAreaElement>(null);
   const len = settings.prompt.trim().length;
@@ -80,6 +82,17 @@ export function Composer({
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
+        <Menu
+          label="Model"
+          heading={hasKey ? "Model" : "Model · Gemini needs your key"}
+          value={settings.modelId}
+          onChange={(modelId) => onChange({ modelId })}
+          icon={<Cpu className="size-4 text-muted" aria-hidden />}
+          options={[
+            { id: FREE_MODEL, label: "Free · Sana", hint: "No key needed · shared free tier, can be rate-limited" },
+            ...GEMINI_MODELS.map((m) => ({ id: m.id, label: m.label, hint: hasKey ? m.hint : `${m.hint} · add your Gemini key` })),
+          ]}
+        />
         <Menu
           label="Style"
           heading="Style · adds to your prompt"

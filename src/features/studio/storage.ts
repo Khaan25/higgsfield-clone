@@ -38,3 +38,27 @@ export function saveHistory(history: Generation[]): Generation[] {
     }
   }
 }
+
+const KEY_KEY = "lumen:gemini-key";
+
+/** The visitor's own Gemini key: sessionStorage by default (gone when the tab closes), localStorage only if they opt in. */
+export function loadKey(): { key: string; remember: boolean } | null {
+  try {
+    const remembered = localStorage.getItem(KEY_KEY);
+    if (remembered) return { key: remembered, remember: true };
+    const session = sessionStorage.getItem(KEY_KEY);
+    return session ? { key: session, remember: false } : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveKey(key: string | null, remember: boolean) {
+  try {
+    localStorage.removeItem(KEY_KEY);
+    sessionStorage.removeItem(KEY_KEY);
+    if (key) (remember ? localStorage : sessionStorage).setItem(KEY_KEY, key);
+  } catch {
+    /* storage blocked: the key lives in memory for this page only */
+  }
+}

@@ -11,6 +11,7 @@ Constraints: logs in `.agent-logs/` are public and never edited/deleted; no app 
 | M3 Strategy | in progress | `PRODUCT_STRATEGY.md` written except the 7 brief questions (brief text not in repo) |
 | M4 Architecture + scaffold | done | `ARCHITECTURE.md`; Next 16.4 scaffold; typecheck/lint/build pass; `GET /` 200 on dev |
 | M5 Primary slice | done (core) | composer + style/aspect/count + generate + honest pending + live/demo results + lightbox + history/search/delete; Playwright smoke desktop+mobile: live gen 4–5s, demo fallback on 429, history survives reload, 0 console errors; `research/screenshots/31-clone-live-generation-desktop.png` |
+| BYOK (user request) | done | Gemini key dialog (session-only by default), model picker, browser→Google call, typed key/quota errors; mocked test: bad key banner, success card, 0 server calls, key only in sessionStorage |
 | M6 Polish | todo | |
 | M7 QA | todo | |
 | M8 Publish | todo | |
@@ -18,6 +19,7 @@ Constraints: logs in `.agent-logs/` are public and never edited/deleted; no app 
 | M10 Final verification | todo | |
 
 Decisions:
+- BYOK: browser calls Google directly (CORS verified), key never touches our server; failures show fixable error banner, not demo. Real-key response shape unverified (needs the user's key in the browser).
 - API returns provider failures as `200 {error}` (typed) so fallbacks don't log red console errors; only malformed input is a real 400.
 - App name: Lumen Studio ("inspired by Higgsfield"). Pollinations anonymous serves only `sana` (flux/turbo return identical bytes; 402 on burst) -> Style presets replace a model picker (`StyleOption` instead of `ModelOption`); generation is sequential server-side; images returned as data URLs.
 - `typecheck` = `next typegen && tsc --noEmit` (LayoutProps globals come from typegen).
