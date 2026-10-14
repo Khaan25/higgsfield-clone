@@ -1,45 +1,128 @@
 "use client";
 
-import { Cpu, Minus, Palette, Plus, Sparkles, Square } from "lucide-react";
-import { useEffect, useRef } from "react";
-import { Menu } from "@/components/ui/menu";
+import { ChevronDown, Cpu, Minus, Palette, Plus, Sparkles, Square } from "lucide-react";
+import { useEffect, useRef, type ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Textarea } from "@/components/ui/textarea";
 import { ASPECTS, COUNT_MAX, FREE_MODEL, GEMINI_MODELS, PROMPT_MAX, STYLES } from "@/lib/catalog";
 import type { AspectRatio, GenerationSettings } from "@/lib/schema";
+import { cn } from "@/lib/utils";
+import { ASPECT_ICON_CLASS } from "./aspect";
 
-function RatioIcon({ ratio }: { ratio: AspectRatio }) {
-  const a = ASPECTS.find((x) => x.id === ratio)!;
-  const scale = 14 / Math.max(a.width, a.height);
+interface SettingOption {
+  id: string;
+  label: string;
+  /** Trade-off or use case shown under the label, so the visitor knows why they'd pick it. */
+  hint: string;
+  icon?: ReactNode;
+}
+
+interface SettingMenuProps {
+  /** Accessible name prefix; the trigger reads as "<label>: <current option>". */
+  label: string;
+
+  /** Heading inside the open menu. */
+  heading: string;
+
+  /** Currently selected option id. */
+  value: string;
+
+  /** Options, in display order. */
+  options: SettingOption[];
+
+  /** Called with the chosen option id. */
+  onValueChange: (id: string) => void;
+
+  /** Icon shown in the trigger before the current option. */
+  icon: ReactNode;
+}
+
+/**
+ * SettingMenu is one pill in the composer: a single-choice menu where every option explains itself.
+ * Built on Radix DropdownMenu for focus management, typeahead and Escape / outside-click closing.
+ */
+function SettingMenu({ label, heading, value, options, onValueChange, icon }: SettingMenuProps) {
+  const current = options.find((o) => o.id === value);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="secondary" size="lg" aria-label={`${label}: ${current?.label}`}>
+          {icon}
+          {current?.label}
+          <ChevronDown data-icon="inline-end" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side="top" align="start" className="w-72">
+        <DropdownMenuLabel>{heading}</DropdownMenuLabel>
+        <DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>
+          {options.map((option) => (
+            <DropdownMenuRadioItem key={option.id} value={option.id}>
+              {option.icon}
+              <span className="flex flex-col">
+                <span>{option.label}</span>
+                <span className="text-xs text-muted-foreground">{option.hint}</span>
+              </span>
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** Outline of an aspect ratio, so the menu shows shapes rather than just numbers. */
+function AspectIcon({ ratio }: { ratio: AspectRatio }) {
   return (
     <span className="grid size-4 place-items-center" aria-hidden>
-      <span className="rounded-[3px] border-[1.5px] border-current" style={{ width: a.width * scale, height: a.height * scale }} />
+      <span className={cn("rounded-xs border-2 border-current", ASPECT_ICON_CLASS[ratio])} />
     </span>
   );
 }
 
-export function Composer({
-  settings,
-  onChange,
-  onSubmit,
-  onCancel,
-  busy,
-  error,
-  hasKey,
-}: {
+interface ComposerProps {
+  /** Current composer values. */
   settings: GenerationSettings;
-  onChange: (patch: Partial<GenerationSettings>) => void;
-  onSubmit: () => void;
-  onCancel: () => void;
-  busy: boolean;
-  error: string | null;
-  hasKey: boolean;
-}) {
-  const ta = useRef<HTMLTextAreaElement>(null);
-  const len = settings.prompt.trim().length;
-  const over = len > PROMPT_MAX;
 
-  // Auto-grow up to ~6 lines.
+  /** Applies a partial change (prompt, model, style, aspect ratio or count). */
+  onSettingsChange: (patch: Partial<GenerationSettings>) => void;
+
+  /** Starts a generation with the current settings. */
+  onSubmit: () => void;
+
+  /** Stops the generation in flight. */
+  onCancel: () => void;
+
+  /** True while a request is in flight; swaps Generate for Stop. */
+  isGenerating: boolean;
+
+  /** Prompt validation message, shown under the prompt box. */
+  promptError: string | null;
+
+  /** Whether a Gemini key is saved; Gemini options say "add your key" when it isn't. */
+  hasApiKey: boolean;
+}
+
+/**
+ * Composer is the docked prompt box: the prompt with a live character count, the model / style /
+ * aspect-ratio menus, the image count stepper, and Generate (or Stop while a request runs).
+ * Enter submits and Shift+Enter adds a new line.
+ */
+export function Composer({ settings, onSettingsChange, onSubmit, onCancel, isGenerating, promptError, hasApiKey }: ComposerProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const promptLength = settings.prompt.trim().length;
+  const isOverLimit = promptLength > PROMPT_MAX;
+
+  // Grow with the prompt up to about six lines, then scroll.
   useEffect(() => {
-    const el = ta.current;
+    const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
@@ -51,104 +134,86 @@ export function Composer({
         e.preventDefault();
         onSubmit();
       }}
-      className="rounded-3xl border border-line bg-surface/95 p-3 shadow-2xl shadow-black/50 backdrop-blur sm:p-4"
+      className="rounded-3xl border bg-card/95 p-3 shadow-2xl backdrop-blur sm:p-4"
       aria-label="Image prompt"
     >
       <label htmlFor="prompt" className="sr-only">
         Describe your image
       </label>
-      <textarea
+      <Textarea
         id="prompt"
-        ref={ta}
+        ref={textareaRef}
         rows={2}
         value={settings.prompt}
-        onChange={(e) => onChange({ prompt: e.target.value })}
+        onChange={(e) => onSettingsChange({ prompt: e.target.value })}
         onKeyDown={(e) => {
+          // isComposing: don't submit while an IME (e.g. Japanese input) is still composing a word.
           if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
             e.preventDefault();
             onSubmit();
           }
         }}
         placeholder="Describe an image… e.g. a lighthouse on a cliff at golden hour"
-        aria-invalid={!!error || over}
+        aria-invalid={!!promptError || isOverLimit}
         aria-describedby="prompt-help"
-        className="block w-full resize-none bg-transparent px-1 text-[15px] leading-relaxed text-fg placeholder:text-muted/70 focus:outline-none"
+        className="min-h-0 resize-none border-0 bg-transparent px-1 text-base shadow-none focus-visible:ring-0 dark:bg-transparent"
       />
       <div id="prompt-help" className="flex min-h-5 items-center justify-between gap-3 px-1 pt-1 text-xs" aria-live="polite">
-        <span className="text-danger">{error}</span>
-        <span className={`tabular-nums ${over ? "text-danger" : len > PROMPT_MAX * 0.9 ? "text-accent" : "text-muted/60"}`}>
-          {len}/{PROMPT_MAX}
+        <span className="text-destructive">{promptError}</span>
+        <span className={cn("tabular-nums", isOverLimit ? "text-destructive" : promptLength > PROMPT_MAX * 0.9 ? "text-primary" : "text-muted-foreground")}>
+          {promptLength}/{PROMPT_MAX}
         </span>
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <Menu
+        <SettingMenu
           label="Model"
-          heading={hasKey ? "Model" : "Model · Gemini needs your key"}
+          heading={hasApiKey ? "Model" : "Model · Gemini needs your key"}
           value={settings.modelId}
-          onChange={(modelId) => onChange({ modelId })}
-          icon={<Cpu className="size-4 text-muted" aria-hidden />}
+          onValueChange={(modelId) => onSettingsChange({ modelId })}
+          icon={<Cpu data-icon="inline-start" />}
           options={[
             { id: FREE_MODEL, label: "Free · Sana", hint: "No key needed · shared free tier, can be rate-limited" },
-            ...GEMINI_MODELS.map((m) => ({ id: m.id, label: m.label, hint: hasKey ? m.hint : `${m.hint} · add your Gemini key` })),
+            ...GEMINI_MODELS.map((m) => ({ id: m.id, label: m.label, hint: hasApiKey ? m.hint : `${m.hint} · add your Gemini key` })),
           ]}
         />
-        <Menu
+        <SettingMenu
           label="Style"
           heading="Style · adds to your prompt"
           value={settings.styleId}
-          onChange={(styleId) => onChange({ styleId: styleId as GenerationSettings["styleId"] })}
-          icon={<Palette className="size-4 text-muted" aria-hidden />}
+          onValueChange={(styleId) => onSettingsChange({ styleId: styleId as GenerationSettings["styleId"] })}
+          icon={<Palette data-icon="inline-start" />}
           options={STYLES.map((s) => ({ id: s.id, label: s.label, hint: s.bestFor }))}
         />
-        <Menu
+        <SettingMenu
           label="Aspect ratio"
           heading="Aspect ratio"
           value={settings.aspectRatio}
-          onChange={(id) => onChange({ aspectRatio: id as AspectRatio })}
-          icon={<RatioIcon ratio={settings.aspectRatio} />}
-          options={ASPECTS.map((a) => ({ id: a.id, label: `${a.id} · ${a.label}`, hint: a.use, icon: <RatioIcon ratio={a.id} /> }))}
+          onValueChange={(id) => onSettingsChange({ aspectRatio: id as AspectRatio })}
+          icon={<AspectIcon ratio={settings.aspectRatio} />}
+          options={ASPECTS.map((a) => ({ id: a.id, label: `${a.id} · ${a.label}`, hint: a.use, icon: <AspectIcon ratio={a.id} /> }))}
         />
-        <div className="flex h-9 items-center rounded-xl border border-line bg-surface-2" role="group" aria-label="Number of images">
-          <button
-            type="button"
-            aria-label="Fewer images"
-            disabled={settings.count <= 1}
-            onClick={() => onChange({ count: settings.count - 1 })}
-            className="grid h-full w-8 place-items-center text-muted hover:text-fg disabled:opacity-30"
-          >
-            <Minus className="size-3.5" />
-          </button>
-          <span className="w-10 text-center text-sm tabular-nums" aria-live="polite">
+        <div className="flex items-center rounded-lg bg-secondary" role="group" aria-label="Number of images">
+          <Button type="button" variant="ghost" size="icon-lg" aria-label="Fewer images" disabled={settings.count <= 1} onClick={() => onSettingsChange({ count: settings.count - 1 })}>
+            <Minus />
+          </Button>
+          <span className="w-8 text-center text-sm tabular-nums" aria-live="polite">
             {settings.count}/{COUNT_MAX}
           </span>
-          <button
-            type="button"
-            aria-label="More images"
-            disabled={settings.count >= COUNT_MAX}
-            onClick={() => onChange({ count: settings.count + 1 })}
-            className="grid h-full w-8 place-items-center text-muted hover:text-fg disabled:opacity-30"
-          >
-            <Plus className="size-3.5" />
-          </button>
+          <Button type="button" variant="ghost" size="icon-lg" aria-label="More images" disabled={settings.count >= COUNT_MAX} onClick={() => onSettingsChange({ count: settings.count + 1 })}>
+            <Plus />
+          </Button>
         </div>
 
         <div className="ml-auto">
-          {busy ? (
-            <button
-              type="button"
-              onClick={onCancel}
-              className="flex h-10 items-center gap-2 rounded-xl border border-line bg-surface-2 px-4 text-sm font-semibold text-fg hover:border-muted/40"
-            >
-              <Square className="size-3.5 fill-current" aria-hidden /> Stop
-            </button>
+          {isGenerating ? (
+            <Button type="button" variant="outline" size="lg" onClick={onCancel}>
+              <Square data-icon="inline-start" className="fill-current" /> Stop
+            </Button>
           ) : (
-            <button
-              type="submit"
-              className="flex h-10 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-semibold text-accent-fg transition hover:brightness-110 active:scale-[0.98]"
-            >
-              <Sparkles className="size-4" aria-hidden /> Generate
-            </button>
+            <Button type="submit" size="lg">
+              <Sparkles data-icon="inline-start" /> Generate
+            </Button>
           )}
         </div>
       </div>
