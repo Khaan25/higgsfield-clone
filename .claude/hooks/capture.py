@@ -12,7 +12,7 @@ A buffered prompt whose turn never reached Stop (interrupted) is flushed by the 
 import json, os, re, sys, tempfile, time
 from datetime import datetime, timezone
 
-AUTHOR, TOOL = "Khaan25", "claude-code"
+AUTHOR, TOOL = "Zia ur Rehman Khan", "claude-code"
 PENDING_DIR = os.path.join(tempfile.gettempdir(), "agent-capture")
 
 
@@ -80,7 +80,7 @@ def write_entries(logdir, sid, project, entries):
     fm = {
         "session_id": sid,
         "date": meta.get("first_prompt_time", first_ts)[:10],
-        "author": AUTHOR,
+        "author": meta.get("author", AUTHOR),  # keep what existing files were written with
         "model": ", ".join(models) or "unknown",
         "tool": TOOL,
         "project": project,
