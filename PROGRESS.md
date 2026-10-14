@@ -7,7 +7,7 @@ Constraints: logs in `.agent-logs/` are public and never edited/deleted; no app 
 |---|---|---|
 | M0 Capture gate | done | `565a6ce`: `CAPTURE-TEST.md` has canaries from sessions 329a0438 + 3c7de566; `.gitignore` extended |
 | M1 Product exploration | done | 6 docs in `research/`, 28 PNGs, all doc references resolve; `research/evidence/guest-network.txt` |
-| M2 Reverse engineering | todo | |
+| M2 Reverse engineering | done | `research/reverse-engineering.md` (CONFIRMED/INFERRED), `research/evidence/rea-summary.json`, REA screenshot 29 |
 | M3 Strategy | todo | |
 | M4 Architecture + scaffold | todo | |
 | M5 Primary slice | todo | |
@@ -18,6 +18,7 @@ Constraints: logs in `.agent-logs/` are public and never edited/deleted; no app 
 | M10 Final verification | todo | |
 
 Decisions:
+- REA run via `npx rea-agents@latest` (no global install) against a separate logged-out Chrome profile on 127.0.0.1:9222; `--allowed-origins` must be repeated per origin (JSON/CSV forms rejected). Took ~15 min, under the 20-min stall limit.
 - 2026-10-14: user chose NOT to pay Higgsfield (0 credits). Real generation states marked 'not tested'; guest flow + community shot detail used as evidence.
 - Guest 'In progress' is a sign-up teaser with no generation request (`research/evidence/guest-network.txt`) -> core argument for no-login demo/real generation in the clone.
 - Using the user's logged-in Chrome profile (Claude in Chrome) instead of the browser pane for Higgsfield.
@@ -26,4 +27,4 @@ Decisions:
 
 Blockers: none.
 
-Next action: M2 — read REA README + docs/browser-observation.md, install `rea-agents`, observe public higgsfield.ai pages, write `research/reverse-engineering.md`.
+Next action: M3 — check Gemini API pricing page for a free image model (note date), write `PRODUCT_STRATEGY.md`.

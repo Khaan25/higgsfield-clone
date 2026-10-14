@@ -1,0 +1,123 @@
+{
+ "captured_at": "2026-10-14",
+ "tool": "rea-agents@latest via CDP (separate Chrome profile, logged out, https://higgsfield.ai/ai/image)",
+ "inspect_web_page": {
+  "evidence_id": "ev_8c960be00c8feff089fa4be51cfe3a16af2cf15d94af785d071c57f764013786",
+  "dom_total_nodes": 2535,
+  "scripts_same_origin": 22,
+  "local_storage_keys": [
+   "ddSession",
+   "hf:photodump-v2",
+   "__clerk_environment",
+   "__clerk_protect_pid",
+   "hf:image-form-upd",
+   "hf:stale-image-ref-cleaned",
+   "__clerk_protect_st",
+   "photodump-v2-seen-preview",
+   "academy:invitations"
+  ],
+  "session_storage_keys": [
+   "__chunk_framework_reload_reported",
+   "tanstack_router_reload:Failed to fetch dynamically imported module: {chunk-url}",
+   "tanstack_router_reload:Failed to fetch dynamically imported module: {chunk-url}",
+   "hf:oauth-locale",
+   "tanstack_router_reload:Failed to fetch dynamically imported module: {chunk-url}",
+   "hf:tab-auth-state",
+   "hf:auth-sessions",
+   "hf:one-tap-started-at",
+   "tsr-scroll-restoration-v1_3"
+  ],
+  "completeness": "policy_filtered",
+  "limitations": [
+   "Observation starts when REA attaches; prior network and console activity is unavailable.",
+   "Raw network headers, bodies, cookies, storage values, console objects, and WebSocket payloads are never retained; explicitly requested primitive console text is retained verbatim, while payload captures retain value-free shapes.",
+   "Source maps are reported only as declarative URLs and are not fetched.",
+   "URL-less scripts and console events without an allowed source URL are excluded because their origin cannot be proven."
+  ]
+ },
+ "analyze_web_bundle": {
+  "evidence_id": "ev_a37d29a405317928b07b0ffc27b0c15eaa9ce5e11fb0e8482bcc5b880cb50846",
+  "completeness": {
+   "status": "complete",
+   "parsed_scripts": 1919,
+   "parse_failures": 0,
+   "visited_ast_nodes": 4185385
+  },
+  "inferences": {
+   "bundle_runtime=Vite (medium)": 64,
+   "vendor_fingerprint=Next.js (high)": 1,
+   "vendor_fingerprint=React (medium)": 2,
+   "route_framework=Generic route registration API (medium)": 1
+  },
+  "route_candidates": [
+   "/client",
+   "/client/touch",
+   "/dev_tools/enable_environment_setting",
+   "/organizations",
+   "/me/organization_memberships",
+   "/me/organization_suggestions",
+   "/me/passkeys",
+   "/me/sessions/active",
+   "/me/organization_creation_defaults",
+   "/me/external_accounts",
+   "/me/totp",
+   "/me/totp/attempt_verification",
+   "/me",
+   "/me/enterprise_connections",
+   "/me/organization_invitations",
+   "/waitlist",
+   "/",
+   "/dev_browser",
+   "/me/oauth/device/lookup",
+   "/me/oauth/device"
+  ],
+  "path_endpoint_candidates": [
+   "/adobe-token.json",
+   "/api/adobe-plugin/session/exchange",
+   "/audio",
+   "/concurrent-boost-credits/disable",
+   "/concurrent-boost-credits/enable",
+   "/concurrent-boost-credits/products",
+   "/concurrent-boost-credits/purchase",
+   "/concurrent-boost-credits/state",
+   "/custom-references/name",
+   "/custom-references/photo-dump",
+   "/custom-references/retrain",
+   "/custom-references/retrain-with-photo-dump",
+   "/emoji.json",
+   "/file",
+   "/jobs/canvas",
+   "/jobs/canvas-soul",
+   "/jobs/flux-kontext",
+   "/jobs/text2image",
+   "/jobs/text2image-gpt",
+   "/jobs/text2image-soul",
+   "/jobs/text2image-soul/batch",
+   "/jobs/text2speech",
+   "/media",
+   "/media/batch",
+   "/media?require_consent=true",
+   "/sharing-configs",
+   "/subscriptions/bundle/purchase/instant/unlim",
+   "/subscriptions/bundle/unlim-catalog",
+   "/subscriptions/invoices",
+   "/test-presets",
+   "/unlim-bundle-modal",
+   "/unlim-bundle-modal/shown",
+   "/uploads/multipart/abort",
+   "/uploads/multipart/complete",
+   "/uploads/multipart/init",
+   "/uploads/multipart/part-urls",
+   "/user/meta",
+   "/v2/quizzes",
+   "/v2/quizzes/user",
+   "/v3/quizzes",
+   "/v3/quizzes/me/triggers",
+   "/video"
+  ]
+ },
+ "capture_web_screenshot": {
+  "evidence_id": "ev_0d9bb9f1b4c46805af3985e69f1800d2e7301f9280731cf914bd85166df5f195",
+  "file": "screenshots/29-rea-cdp-capture-image-logged-out.png"
+ }
+}
