@@ -1,4 +1,4 @@
-import { Code2, KeyRound, Sparkles } from "lucide-react";
+import { Code2, FileText, KeyRound, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -29,6 +29,12 @@ export function StudioHeader({ hasApiKey, onOpenKeyDialog }: StudioHeaderProps) 
           <span className="sm:hidden">{hasApiKey ? "Key" : "Add key"}</span>
           <span className="hidden sm:inline">{hasApiKey ? "Gemini key" : "Use your Gemini key"}</span>
           {hasApiKey && <span className="size-1.5 rounded-full bg-success" aria-label="(saved)" />}
+        </Button>
+        <Button variant="ghost" asChild>
+          <Link href="/notes" aria-label="Build notes">
+            <FileText data-icon="inline-start" />
+            <span className="hidden sm:inline">Notes</span>
+          </Link>
         </Button>
         <Button variant="ghost" asChild>
           <a href={REPO_URL} target="_blank" rel="noreferrer" aria-label="Source code on GitHub">

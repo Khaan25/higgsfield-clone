@@ -8,7 +8,7 @@ test.skip(!process.env.E2E_BASE_URL, "production check needs E2E_BASE_URL");
 test.setTimeout(120_000);
 
 test("deployed app: routes respond and the primary flow completes for a signed-out visitor", async ({ page, request }, info) => {
-  for (const path of ["/", "/demo/landscape-1.jpg", "/favicon.ico"]) {
+  for (const path of ["/", "/notes", "/demo/landscape-1.jpg", "/favicon.ico"]) {
     expect((await request.get(path)).status(), path).toBe(200);
   }
 

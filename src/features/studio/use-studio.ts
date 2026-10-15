@@ -28,7 +28,7 @@ function createDemoNotice(error: GenerateError, settings: GenerationSettings): S
       ? "The free image provider is rate-limiting us right now."
       : error.kind === "timeout"
         ? "The free image provider timed out."
-        : "Live generation isn't available right now.";
+        : error.message || "Live generation isn't available right now.";
   const retryHint = error.retryAfter ? ` Try again in about ${error.retryAfter}s.` : "";
   return {
     tone: "demo",

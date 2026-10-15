@@ -33,6 +33,11 @@ test("navigation: header, source link, logo and key dialog", async ({ page }) =>
   await expect(page.getByRole("dialog", { name: "Use your own Gemini key" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toBeHidden();
+  await page.getByRole("link", { name: "Build notes" }).click();
+  await expect(page.getByRole("heading", { name: /What I built, what I left out/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /I'd add/ })).toBeVisible();
+  await page.getByRole("link", { name: "Back to the studio" }).click();
+  await expect(page.getByRole("heading", { name: /Type an idea/ })).toBeVisible();
   await page.getByRole("link", { name: "Lumen" }).click();
   await expect(page).toHaveURL(/\/$/);
 });
