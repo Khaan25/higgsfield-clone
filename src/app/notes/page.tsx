@@ -33,9 +33,9 @@ const NOT_BUILT = [
 
 /** What bring-your-own-key does today, so the trade-off is explicit. */
 const BYOK_POINTS = [
-  "Paste your own Gemini key to unlock Google's Nano Banana models at Google's price, with no credit markup.",
-  "The key goes from your browser straight to Google. It is never sent to Lumen's server.",
-  "It is kept for this tab only, unless you tick \"Remember on this device\".",
+  "Visitors paste their own Gemini key to unlock Google's Nano Banana models at Google's price, with no credit markup.",
+  "The key goes from the visitor's browser straight to Google. It is never sent to Lumen's server.",
+  "It is kept for the current tab only, unless \"Remember on this device\" is ticked.",
   "A bad key or missing quota shows Google's own message and a way to fix it, not a dead end.",
 ];
 
@@ -47,11 +47,11 @@ const NEXT_UP = [
   },
   {
     title: "Accounts page",
-    detail: "Profile, saved keys and usage history, with generations stored server-side so history follows you across devices.",
+    detail: "Profile, saved keys and usage history, with generations stored server-side so history follows the account across devices.",
   },
   {
     title: "Tier-based system",
-    detail: "Free, Pro and Max tiers backed by Stripe subscriptions and a credit ledger, with the price shown before you generate, not after.",
+    detail: "Free, Pro and Max tiers backed by Stripe subscriptions and a credit ledger, with the price shown before generating, not after.",
   },
   {
     title: "Rate limiting",
@@ -90,7 +90,7 @@ export default function NotesPage() {
         <Badge variant="secondary">Build notes</Badge>
         <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">What I built, what I left out, and why</h1>
         <p className="text-muted-foreground">
-          You said you want to see how I approach building with AI: speed, thought process, UX and UI. I used Higgsfield first, then picked the
+          The requirements were to show how I approach building with AI: speed, thought process, UX and UI. I used Higgsfield first, then picked the
           one loop that matters most to a first-time visitor (type an idea, get an image) and made it work with no account and no dead ends.
         </p>
       </header>
