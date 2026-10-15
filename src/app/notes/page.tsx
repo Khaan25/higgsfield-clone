@@ -27,7 +27,7 @@ const NOT_BUILT = [
   {
     title: "A paid default model",
     detail:
-      "I don't have a paid Gemini key, and Gemini has no free API tier for image models (checked 14 Oct 2026). So the default is a keyless free model, with clearly labelled Demo images when it's busy, and Gemini is bring-your-own-key.",
+      "I don't have a paid Gemini key, and Gemini has no free API tier for image models. So the default is a keyless free model, with clearly labelled Demo images when it's busy, and Gemini is bring-your-own-key.",
   },
 ];
 
